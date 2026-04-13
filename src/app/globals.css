@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
+/*
+ * Dark-first theme. Restrained monochrome base with provider-colored
+ * accents — Linear / Vercel dashboard feel, tuned to look like a real
+ * product, not a portfolio flex. Tabular numerals on every metric.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --bg:           #0A0A0B;  /* page background */
+  --bg-elev:      #111114;  /* card */
+  --bg-elev-2:    #16161A;  /* nested card / hover */
+  --border:       #1F1F24;
+  --border-soft:  #17171B;
+
+  /* Text */
+  --fg:           #ECECEE;
+  --fg-muted:     #9A9AA4;
+  --fg-dim:       #5E5E68;
+  --fg-label:     #72727C;
+
+  /* Accents */
+  --accent:       #E5E5EA;
+  --accent-anthropic: #F59E0B; /* warm amber */
+  --accent-openai:    #10B981; /* teal-green */
+  --accent-other:     #6366F1; /* violet fallback */
+  --danger:       #EF4444;
+  --warn:         #F59E0B;
+  --ok:           #10B981;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-border: var(--border);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Arial, sans-serif;
+  font-feature-settings: "cv11", "ss01", "tnum"; /* tabular figures */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/* Utility: tabular-nums for metric numbers */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Reusable card shell */
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-label);
+}
+
+/* Subtle fade-in for new rows in Live Tail */
+@keyframes obs-fade-in {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: obs-fade-in 220ms ease-out;
+}
+
+/* Scrollbar tuning */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #2A2A32; }
