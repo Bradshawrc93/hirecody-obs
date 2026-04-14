@@ -65,6 +65,71 @@ Error responses:
 
 ---
 
+## 2a. Spend read endpoint (hard cap enforcement)
+
+For apps that need to enforce a hard daily spend cap with `obs` as the authoritative source of truth. Call this before each provider request and refuse the call if the returned cost has already crossed your cap.
+
+```
+GET  https://<your-obs-domain>/api/apps/<slug>/spend?window=today
+```
+
+Headers:
+
+| Header      | Value              |
+|-------------|--------------------|
+| `x-api-key` | Your `obs_...` key |
+
+The API key must belong to the app identified by `<slug>`. A valid key for a *different* app returns `401`.
+
+Query params:
+
+| Param    | Values    | Notes                                                                                |
+|----------|-----------|--------------------------------------------------------------------------------------|
+| `window` | `today`   | v1 supports `today` only. "Today" means the current UTC calendar day. `week` / `month` / `all` may be added later — unknown values return `400`, so callers should pin to `today`. |
+
+Response on success (HTTP 200):
+
+```json
+{
+  "app":         "portfolio-chatbot",
+  "window":      "today",
+  "windowStart": "2026-04-13T00:00:00.000Z",
+  "cost_usd":    3.1842
+}
+```
+
+`cost_usd` is the sum of `events.cost_usd` for the given app since `windowStart`. It reflects the same value the dashboard sees — there is no caching layer in front of it. At the scale this project targets, the query runs well under 50ms using the existing `(app_id, timestamp desc)` index.
+
+Error responses:
+
+| Status | Meaning                                                                |
+|--------|------------------------------------------------------------------------|
+| 400    | `window` query param is missing a supported value                      |
+| 401    | Missing `x-api-key`, invalid key, or the key belongs to a different app |
+| 404    | The `<slug>` in the URL does not correspond to any app                  |
+| 500    | Database lookup or sum query failed                                    |
+
+### Example: hard cap at $5/day
+
+```ts
+const DAILY_CAP_USD = 5.0;
+
+const res = await fetch(
+  `${process.env.OBS_ENDPOINT_BASE}/api/apps/${process.env.OBS_APP_SLUG}/spend?window=today`,
+  { headers: { "x-api-key": process.env.OBS_API_KEY! } },
+);
+const { cost_usd } = await res.json();
+
+if (cost_usd >= DAILY_CAP_USD) {
+  return new Response("daily spend cap reached, try again tomorrow", { status: 429 });
+}
+// ...proceed with the LLM call, then POST /api/events as usual.
+```
+
+Important: the chatbot should **not** maintain its own running total. Always ask `obs` — it is the source of truth, and every call writes to the same `events` table this endpoint reads from.
+
+---
+
 ## 3. Payload schema
 
 All field names are **camelCase**. Unknown fields are rejected.
