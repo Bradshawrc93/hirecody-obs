@@ -9,20 +9,29 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
+import { formatUsd } from "@/lib/utils";
+
+export type YFormat = "number" | "usd" | "percent";
+
+function formatY(v: number, format: YFormat): string {
+  if (format === "usd") return formatUsd(v);
+  if (format === "percent") return (v * 100).toFixed(1) + "%";
+  return String(v);
+}
 
 /** Generic single-series line chart with dark-theme styling. */
 export function SimpleLine({
   data,
   xKey,
   yKey,
-  yFormatter,
+  yFormat = "number",
   color = "#ECECEE",
   height = 200,
 }: {
   data: Array<Record<string, number | string>>;
   xKey: string;
   yKey: string;
-  yFormatter?: (v: number) => string;
+  yFormat?: YFormat;
   color?: string;
   height?: number;
 }) {
@@ -40,7 +49,7 @@ export function SimpleLine({
           />
           <YAxis
             tick={{ fill: "#6E6E78", fontSize: 11 }}
-            tickFormatter={(v) => (yFormatter ? yFormatter(Number(v)) : String(v))}
+            tickFormatter={(v) => formatY(Number(v), yFormat)}
             axisLine={{ stroke: "#222228" }}
             tickLine={false}
             width={60}
@@ -52,9 +61,7 @@ export function SimpleLine({
               borderRadius: 8,
               fontSize: 12,
             }}
-            formatter={(v) =>
-              yFormatter ? yFormatter(Number(v)) : String(v)
-            }
+            formatter={(v) => formatY(Number(v), yFormat)}
           />
           <Line
             type="monotone"

@@ -74,7 +74,7 @@ export default async function AppDetailPage({
               xKey="date"
               yKey="cost"
               color="#F59E0B"
-              yFormatter={(v) => formatUsd(v)}
+              yFormat="usd"
             />
           </div>
         </Card>
@@ -100,7 +100,7 @@ export default async function AppDetailPage({
               xKey="date"
               yKey="rate"
               color="#EF4444"
-              yFormatter={(v) => (v * 100).toFixed(1) + "%"}
+              yFormat="percent"
             />
           </div>
         </Card>
