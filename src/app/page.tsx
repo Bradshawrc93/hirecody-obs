@@ -107,7 +107,7 @@ export default async function OverviewPage() {
         </span>
         <span>
           Built by Cody ·{" "}
-          <a className="hover:text-[var(--fg)]" href="#">
+          <a className="hover:text-[var(--fg)]" href="https://hirecody.dev">
             portfolio
           </a>
         </span>
