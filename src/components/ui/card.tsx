@@ -24,7 +24,7 @@ export function CardHeader({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="card-header flex items-center justify-between">
+    <div className="card-header flex flex-wrap items-center justify-between gap-2">
       <span>{title}</span>
       {right ? <div className="normal-case tracking-normal">{right}</div> : null}
     </div>

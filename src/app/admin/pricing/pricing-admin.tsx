@@ -93,7 +93,8 @@ export function PricingAdmin({ rows }: { rows: ModelPricingRow[] }) {
         </form>
       ) : null}
 
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto">
+      <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr
             className="text-[0.62rem] uppercase tracking-wider"
@@ -124,6 +125,7 @@ export function PricingAdmin({ rows }: { rows: ModelPricingRow[] }) {
           ))}
         </tbody>
       </table>
+      </div>
     </Card>
   );
 }

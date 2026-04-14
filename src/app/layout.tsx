@@ -26,11 +26,11 @@ export default async function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen flex-col md:flex-row">
           <Sidebar isAdmin={admin} />
           <main className="flex-1 min-w-0">
             <BudgetBanner apps={overBudget} />
-            <div className="mx-auto max-w-[1240px] px-8 py-8">{children}</div>
+            <div className="mx-auto max-w-[1240px] px-4 py-4 md:px-8 md:py-8">{children}</div>
           </main>
         </div>
       </body>

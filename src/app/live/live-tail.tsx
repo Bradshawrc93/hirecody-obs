@@ -95,7 +95,7 @@ export function LiveTail({
       <CardHeader
         title="Live stream"
         right={
-          <div className="flex items-center gap-3 text-xs" style={{ color: "var(--fg-muted)" }}>
+          <div className="flex flex-wrap items-center gap-2 text-xs sm:gap-3" style={{ color: "var(--fg-muted)" }}>
             <span className="tnum">
               {eps.toFixed(1)} <span style={{ color: "var(--fg-dim)" }}>evt/s</span>
             </span>
@@ -134,7 +134,7 @@ export function LiveTail({
             return (
               <div
                 key={r.id}
-                className={`flex items-center gap-4 px-5 py-2 font-mono text-[0.78rem] tnum ${
+                className={`flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 font-mono text-[0.78rem] tnum sm:flex-nowrap sm:gap-4 sm:px-5 ${
                   isNew ? "fade-in" : ""
                 }`}
                 style={{ borderColor: "var(--border-soft)" }}
@@ -143,8 +143,10 @@ export function LiveTail({
                   {new Date(r.timestamp).toLocaleTimeString()}
                 </span>
                 <Tag tone={providerTone(r.provider)}>{r.provider}</Tag>
-                <span style={{ color: "var(--fg-muted)" }}>{r.app_display_name}</span>
-                <span>{r.model}</span>
+                <span className="hidden sm:inline" style={{ color: "var(--fg-muted)" }}>
+                  {r.app_display_name}
+                </span>
+                <span className="truncate">{r.model}</span>
                 <span style={{ color: "var(--fg-muted)" }}>
                   {r.input_tokens}→{r.output_tokens}
                 </span>
@@ -154,7 +156,7 @@ export function LiveTail({
                 <span>{formatUsd(r.cost_usd)}</span>
                 {r.status === "error" ? <Tag tone="danger">error</Tag> : null}
                 <span
-                  className="ml-auto max-w-[40%] truncate"
+                  className="order-last w-full truncate sm:order-none sm:ml-auto sm:w-auto sm:max-w-[40%]"
                   style={{ color: "var(--fg-muted)" }}
                   title={r.prompt_preview ?? ""}
                 >

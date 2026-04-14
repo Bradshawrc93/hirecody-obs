@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,6 +12,8 @@ import {
   ShieldCheck,
   Server,
   ArrowLeft,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +22,9 @@ import { cn } from "@/lib/utils";
  * "no sidebar" default for this project). Admin section only shows when
  * the `isAdmin` prop is true — the server layout passes that in after
  * checking the Supabase session.
+ *
+ * Below `md` the sidebar collapses into a sticky top bar with a hamburger
+ * that slides the full nav in as an overlay drawer.
  */
 
 type NavItem = {
@@ -44,6 +50,22 @@ const adminNav: NavItem[] = [
 
 export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // Close the drawer on route change so tapping a link dismisses it.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll while the drawer is open on mobile.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   const renderItem = (item: NavItem) => {
     const Icon = item.icon;
@@ -68,11 +90,8 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
     );
   };
 
-  return (
-    <aside
-      className="flex h-screen w-[232px] shrink-0 flex-col border-r"
-      style={{ borderColor: "var(--border)", background: "var(--bg)" }}
-    >
+  const navBody = (
+    <>
       {/* Brand */}
       <div
         className="flex items-center gap-2 px-5 py-5 border-b"
@@ -121,6 +140,67 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
           </Link>
         )}
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — md and up */}
+      <aside
+        className="hidden md:flex h-screen w-[232px] shrink-0 flex-col border-r sticky top-0"
+        style={{ borderColor: "var(--border)", background: "var(--bg)" }}
+      >
+        {navBody}
+      </aside>
+
+      {/* Mobile top bar — below md */}
+      <div
+        className="md:hidden sticky top-0 z-40 flex items-center justify-between border-b px-4 py-3"
+        style={{
+          borderColor: "var(--border)",
+          background: "var(--bg)",
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Server size={18} style={{ color: "#C56A2D" }} strokeWidth={2.25} />
+          <span className="text-sm font-semibold">obs</span>
+        </div>
+        <button
+          type="button"
+          aria-label="Open navigation"
+          aria-expanded={open}
+          onClick={() => setOpen(true)}
+          className="rounded-md p-2 text-[var(--fg-muted)] hover:bg-[var(--bg-elev-2)] hover:text-[var(--fg)]"
+        >
+          <Menu size={20} />
+        </button>
+      </div>
+
+      {/* Mobile drawer overlay */}
+      {open ? (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <button
+            type="button"
+            aria-label="Close navigation"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 bg-black/60"
+          />
+          <aside
+            className="relative flex h-full w-[260px] max-w-[80vw] flex-col border-r"
+            style={{ borderColor: "var(--border)", background: "var(--bg)" }}
+          >
+            <button
+              type="button"
+              aria-label="Close navigation"
+              onClick={() => setOpen(false)}
+              className="absolute right-3 top-4 rounded-md p-1 text-[var(--fg-muted)] hover:bg-[var(--bg-elev-2)] hover:text-[var(--fg)]"
+            >
+              <X size={18} />
+            </button>
+            {navBody}
+          </aside>
+        </div>
+      ) : null}
+    </>
   );
 }

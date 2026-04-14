@@ -46,10 +46,10 @@ export function BudgetBanner({ apps }: { apps: OverBudgetApp[] }) {
 
   return (
     <div
-      className="flex items-center justify-between border-b px-6 py-2 text-xs"
+      className="flex flex-col gap-2 border-b px-4 py-2 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6"
       style={{ background: bg, color: fg, borderColor: border }}
     >
-      <div className="flex items-center gap-3 tnum">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 tnum">
         <span className="font-semibold uppercase tracking-wider">Budget alert</span>
         <Link
           href={`/apps/${worst.slug}`}

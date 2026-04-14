@@ -54,14 +54,14 @@ export default async function ComparePage({
 
   return (
     <div className="space-y-6">
-      <header className="flex items-end justify-between">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-[1.5rem] font-semibold tracking-tight">Model Comparison</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
             Side-by-side performance for every model used in the selected scope.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <AppSelector apps={apps.map((a) => ({ slug: a.slug, display_name: a.display_name }))} />
           <DateRangePicker />
         </div>
@@ -75,12 +75,15 @@ export default async function ComparePage({
         </Card>
       ) : (
         <>
-          {/* Side-by-side columns */}
+          {/* Side-by-side columns — stack on mobile, 2-up on small, full count on md+ */}
           <div
-            className="grid gap-4"
-            style={{
-              gridTemplateColumns: `repeat(${Math.min(result.models.length, 4)}, minmax(0, 1fr))`,
-            }}
+            className={`grid gap-4 grid-cols-1 sm:grid-cols-2 ${
+              {
+                2: "md:grid-cols-2",
+                3: "md:grid-cols-3",
+                4: "md:grid-cols-4",
+              }[Math.min(result.models.length, 4)] ?? "md:grid-cols-4"
+            }`}
           >
             {result.models.slice(0, 4).map((m) => (
               <Card key={m.model}>
