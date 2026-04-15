@@ -36,12 +36,20 @@ export async function GET(req: Request) {
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
-    return NextResponse.redirect(
+    const errResponse = NextResponse.redirect(
       new URL(
         `/admin/login?error=${encodeURIComponent(error.message)}`,
         url.origin,
       ),
     );
+    errResponse.headers.set("Cache-Control", "no-store");
+    return errResponse;
   }
+  // Critical: force no-store so Vercel's edge doesn't strip Set-Cookie
+  // headers. Next.js defaults route-handler redirects to `public, max-age=0,
+  // must-revalidate`, and CDNs (including Vercel) strip Set-Cookie from any
+  // response tagged `public`. Without this, session cookies never reach the
+  // browser on prod even though they work fine in `next dev`.
+  response.headers.set("Cache-Control", "no-store");
   return response;
 }
