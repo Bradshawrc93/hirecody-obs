@@ -47,6 +47,8 @@ const CreateAgentSchema = z.object({
     .regex(/^\d{2}:\d{2}:\d{2}$/)
     .nullable()
     .optional(),
+  schedule_day_of_week: z.number().int().min(0).max(6).nullable().optional(),
+  schedule_day_of_month: z.number().int().min(1).max(28).nullable().optional(),
   // creator_type is intentionally NOT accepted from request. All public
   // creates become 'visitor'. Owner agents are promoted via an internal
   // admin flow that isn't exposed here.
@@ -108,6 +110,9 @@ export async function POST(req: Request) {
   const nextRun = computeNextRun(
     p.schedule_cadence ?? null,
     p.schedule_time ?? null,
+    new Date(),
+    p.schedule_day_of_week ?? null,
+    p.schedule_day_of_month ?? null,
   );
 
   const { data: agent, error: agentErr } = await db
@@ -126,6 +131,8 @@ export async function POST(req: Request) {
       context_text: p.context_text ?? null,
       schedule_cadence: p.schedule_cadence ?? null,
       schedule_time: p.schedule_time ?? null,
+      schedule_day_of_week: p.schedule_day_of_week ?? null,
+      schedule_day_of_month: p.schedule_day_of_month ?? null,
       next_run_at: nextRun?.toISOString() ?? null,
       creator_type: "visitor",
       verified_email: p.verified_email ?? null,

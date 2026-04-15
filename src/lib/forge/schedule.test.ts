@@ -38,4 +38,42 @@ describe("computeNextRun", () => {
     // Feb 2026 has 28 days
     expect(next?.toISOString()).toBe("2026-02-28T09:00:00.000Z");
   });
+
+  // 2026-04-14 is a Tuesday (dow=2).
+  it("weekly with dayOfWeek: picks the next occurrence of that weekday", () => {
+    const from = new Date("2026-04-14T06:00:00Z"); // Tue
+    // Friday = 5
+    const next = computeNextRun("weekly", "09:00:00", from, 5, null);
+    expect(next?.toISOString()).toBe("2026-04-17T09:00:00.000Z");
+  });
+
+  it("weekly with dayOfWeek=today but time passed: jumps 7 days", () => {
+    const from = new Date("2026-04-14T10:00:00Z"); // Tue, 10am UTC
+    const next = computeNextRun("weekly", "09:00:00", from, 2, null);
+    expect(next?.toISOString()).toBe("2026-04-21T09:00:00.000Z");
+  });
+
+  it("weekly with dayOfWeek=today and time upcoming: schedules today", () => {
+    const from = new Date("2026-04-14T06:00:00Z"); // Tue, 6am UTC
+    const next = computeNextRun("weekly", "09:00:00", from, 2, null);
+    expect(next?.toISOString()).toBe("2026-04-14T09:00:00.000Z");
+  });
+
+  it("monthly with dayOfMonth in the future this month", () => {
+    const from = new Date("2026-04-14T10:00:00Z");
+    const next = computeNextRun("monthly", "09:00:00", from, null, 20);
+    expect(next?.toISOString()).toBe("2026-04-20T09:00:00.000Z");
+  });
+
+  it("monthly with dayOfMonth already passed: rolls to next month", () => {
+    const from = new Date("2026-04-14T10:00:00Z");
+    const next = computeNextRun("monthly", "09:00:00", from, null, 5);
+    expect(next?.toISOString()).toBe("2026-05-05T09:00:00.000Z");
+  });
+
+  it("monthly with dayOfMonth=today and time passed: rolls to next month", () => {
+    const from = new Date("2026-04-14T10:00:00Z");
+    const next = computeNextRun("monthly", "09:00:00", from, null, 14);
+    expect(next?.toISOString()).toBe("2026-05-14T09:00:00.000Z");
+  });
 });

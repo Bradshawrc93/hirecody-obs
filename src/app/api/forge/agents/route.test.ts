@@ -51,7 +51,7 @@ function makeFakeDb() {
         };
       }
       if (table === "forge_agents") {
-        const builder: Record<string, unknown> = {
+        return {
           insert: (payload: Row) => {
             state.lastAgentInsert = payload;
             return {
@@ -63,7 +63,7 @@ function makeFakeDb() {
               }),
             };
           },
-          select: (_cols: string) => {
+          select: () => {
             const q = {
               _filter: {} as Record<string, unknown>,
               neq(col: string, val: unknown) {
@@ -88,7 +88,6 @@ function makeFakeDb() {
             return q;
           },
         };
-        return builder;
       }
       throw new Error(`unexpected table: ${table}`);
     },

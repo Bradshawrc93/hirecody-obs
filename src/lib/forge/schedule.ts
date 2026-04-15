@@ -8,11 +8,16 @@ import type { ForgeScheduleCadence } from "./types";
  * schedule_time and whose date matches the cadence.
  *
  * Daily:   next occurrence of that time, today or tomorrow.
- * Weekly:  same weekday as `from`'s current week anchor — we interpret
- *          "weekly" as "every 7 days from the first run", so we just add
- *          7d increments until we exceed `from`.
- * Monthly: same day-of-month. If the day doesn't exist in the next month
- *          (e.g. Jan 31 → Feb), fall back to the last day of that month.
+ * Weekly:  if `dayOfWeek` (0=Sun..6=Sat) is supplied, the next occurrence
+ *          of that weekday at that time; otherwise legacy behavior — the
+ *          first multiple of 7 days past `from` at that time.
+ * Monthly: if `dayOfMonth` (1..28) is supplied, the next occurrence of
+ *          that day-of-month at that time; otherwise legacy behavior —
+ *          same day-of-month as `from`, clamped to the last day of the
+ *          target month when it doesn't exist.
+ *
+ * dayOfMonth is capped at 28 at the schema level so we never need to
+ * short-month-fallback in the explicit-day path.
  *
  * Returns null if cadence or time are missing.
  */
@@ -20,6 +25,8 @@ export function computeNextRun(
   cadence: ForgeScheduleCadence | null,
   scheduleTime: string | null,
   from: Date = new Date(),
+  dayOfWeek: number | null = null,
+  dayOfMonth: number | null = null,
 ): Date | null {
   if (!cadence || !scheduleTime) return null;
 
@@ -43,6 +50,24 @@ export function computeNextRun(
   }
 
   if (cadence === "weekly") {
+    if (dayOfWeek !== null && dayOfWeek >= 0 && dayOfWeek <= 6) {
+      const currentDow = from.getUTCDay();
+      const diff = (dayOfWeek - currentDow + 7) % 7;
+      let next = new Date(
+        Date.UTC(
+          from.getUTCFullYear(),
+          from.getUTCMonth(),
+          from.getUTCDate() + diff,
+          hh,
+          mm,
+          ss,
+        ),
+      );
+      if (next.getTime() <= from.getTime()) {
+        next = new Date(next.getTime() + 7 * 24 * 60 * 60 * 1000);
+      }
+      return next;
+    }
     let next = base;
     while (next.getTime() <= from.getTime()) {
       next = new Date(next.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -51,11 +76,20 @@ export function computeNextRun(
   }
 
   // monthly
+  if (dayOfMonth !== null && dayOfMonth >= 1 && dayOfMonth <= 28) {
+    const year = from.getUTCFullYear();
+    const month = from.getUTCMonth();
+    let next = new Date(Date.UTC(year, month, dayOfMonth, hh, mm, ss));
+    if (next.getTime() <= from.getTime()) {
+      next = new Date(Date.UTC(year, month + 1, dayOfMonth, hh, mm, ss));
+    }
+    return next;
+  }
+
   if (base.getTime() > from.getTime()) return base;
   const year = base.getUTCFullYear();
   const month = base.getUTCMonth();
   const desiredDay = base.getUTCDate();
-  // Last day of next month
   const lastOfNext = new Date(Date.UTC(year, month + 2, 0)).getUTCDate();
   const actualDay = Math.min(desiredDay, lastOfNext);
   return new Date(Date.UTC(year, month + 1, actualDay, hh, mm, ss));

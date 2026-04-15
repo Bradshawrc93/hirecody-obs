@@ -53,6 +53,9 @@ export async function POST(req: Request) {
     const nextRun = computeNextRun(
       agent.schedule_cadence,
       agent.schedule_time,
+      new Date(),
+      agent.schedule_day_of_week,
+      agent.schedule_day_of_month,
     );
     await db
       .from("forge_agents")

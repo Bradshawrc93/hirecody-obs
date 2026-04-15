@@ -156,6 +156,8 @@ Request:
   "context_text": "My interests: LLM eval, devtools, startups. Avoid crypto.",
   "schedule_cadence": "daily",
   "schedule_time": "13:00:00",
+  "schedule_day_of_week": null,
+  "schedule_day_of_month": null,
   "verified_email": "user@example.com"
 }
 ```
@@ -174,6 +176,23 @@ Required: `slug`, `display_name`, `description`. Everything else is optional wit
 | `output_type` | `"text"` (valid: `text`, `file`, `email`, `notification`, `side-effect`) |
 
 `schedule_cadence` must be one of `daily`, `weekly`, `monthly`. `schedule_time` is a UTC wall-clock in `HH:MM:SS` format. If both are provided, `next_run_at` is computed server-side.
+
+**Day fields for weekly / monthly cadence:**
+
+| Field | Type | Valid range | When it applies |
+|---|---|---|---|
+| `schedule_day_of_week` | integer, nullable | `0..6` (0=Sunday, 6=Saturday) | only when `schedule_cadence='weekly'` |
+| `schedule_day_of_month` | integer, nullable | `1..28` | only when `schedule_cadence='monthly'` |
+
+The upper bound of 28 for `schedule_day_of_month` is intentional — it guarantees the day exists in every month, so we never need to fall back to "last day of the month" for short months like February. If you need end-of-month semantics, send `28` (or use a different cadence).
+
+Day fields interact with `schedule_cadence` and `schedule_time` as follows when computing `next_run_at`:
+
+- **daily**: day fields are ignored. The next run is the next occurrence of `schedule_time`.
+- **weekly + `schedule_day_of_week`**: the next occurrence of that weekday at `schedule_time`, strictly in the future. If the target weekday is today and `schedule_time` has already passed, it rolls to next week.
+- **weekly + no `schedule_day_of_week`** *(legacy)*: the first multiple of 7 days past "now" at `schedule_time`. Retained for backward compatibility with agents created before this field existed — new agents should always send `schedule_day_of_week` for weekly cadence.
+- **monthly + `schedule_day_of_month`**: the next occurrence of that day-of-month at `schedule_time`, strictly in the future. If the target day is today and the time has already passed, it rolls to next month.
+- **monthly + no `schedule_day_of_month`** *(legacy)*: interpreted as "same day-of-month as the agent's first scheduled run", with clamping to the last day of short months. Also retained for backward compatibility — new agents should always send `schedule_day_of_month`.
 
 Response (`201 Created`):
 
@@ -251,16 +270,79 @@ Requires `x-api-key`. Any subset of these fields may be provided:
   "config": {...},
   "schedule_cadence": "weekly",
   "schedule_time": "09:00:00",
+  "schedule_day_of_week": 1,
+  "schedule_day_of_month": null,
   "verified_email": "user@example.com",
   "last_run_at": "2026-04-14T13:00:00Z"
 }
 ```
 
-Allowed status values in PATCH: `building`, `build_failed`, `awaiting_test`, `test_failed`, `active`, `paused`, `deleted`. **`expired` is not user-settable** — it is only reachable via the nightly expiry cron. If the transition isn't valid, returns `409`. A second concurrent PATCH that loses a status race also returns `409 status changed under us` — retry with a fresh GET. If either scheduling field changes, `next_run_at` is recomputed.
+Allowed status values in PATCH: `building`, `build_failed`, `awaiting_test`, `test_failed`, `active`, `paused`, `deleted`. **`expired` is not user-settable** — it is only reachable via the nightly expiry cron. If the transition isn't valid, returns `409`. A second concurrent PATCH that loses a status race also returns `409 status changed under us` — retry with a fresh GET. If any scheduling field changes (`schedule_cadence`, `schedule_time`, `schedule_day_of_week`, or `schedule_day_of_month`), `next_run_at` is recomputed using the patched value merged over whatever the agent already had.
 
 #### `DELETE /api/forge/agents/[id]` — soft-delete
 
 Requires `x-api-key`. Flips status to `deleted`. The row is not physically removed; subsequent auth calls using its key will return `401`.
+
+#### `GET /api/forge/agents/[id]/runs` — list runs for an agent
+
+Requires `x-api-key`. Paginated, lean list of historical runs belonging to this agent. Use this to render the run history table on the agent detail view. It intentionally omits large fields (`input_text`, `input_file_path`, `output`) and all step data — for the full run record, call `GET /api/forge/runs/[run_id]`, and for step events call `GET /api/forge/runs/[run_id]/steps`.
+
+Query params (all optional):
+
+| Param | Type | Default | Notes |
+|---|---|---|---|
+| `status` | `queued` \| `running` \| `completed` \| `failed` | — | filter by run status |
+| `run_type` | `test` \| `scheduled` \| `manual` | — | filter by run type |
+| `limit` | integer | `20` | clamped to `[1, 100]` |
+| `offset` | integer | `0` | clamped to `>= 0` |
+
+Ordered by `created_at` **descending** (most recent first). An invalid `status` or `run_type` value returns `400`.
+
+Example:
+
+```
+GET /api/forge/agents/a4d2.../runs?status=completed&run_type=scheduled&limit=10&offset=0
+x-api-key: obs_...
+```
+
+Response (`200`):
+
+```json
+{
+  "runs": [
+    {
+      "id": "r-001",
+      "run_type": "scheduled",
+      "status": "completed",
+      "started_at": "2026-04-14T13:00:01Z",
+      "completed_at": "2026-04-14T13:00:12Z",
+      "duration_ms": 11000,
+      "user_rating": "up",
+      "success_criteria_met": true,
+      "cost_usd": 0.032,
+      "error_message": null,
+      "created_at": "2026-04-14T13:00:00Z"
+    },
+    {
+      "id": "r-002",
+      "run_type": "test",
+      "status": "failed",
+      "started_at": "2026-04-13T11:00:01Z",
+      "completed_at": "2026-04-13T11:00:04Z",
+      "duration_ms": 3000,
+      "user_rating": null,
+      "success_criteria_met": false,
+      "cost_usd": 0.0,
+      "error_message": "web-fetch timed out",
+      "created_at": "2026-04-13T11:00:00Z"
+    }
+  ],
+  "limit": 10,
+  "offset": 0
+}
+```
+
+To paginate, bump `offset` by `limit` on each subsequent call. (This endpoint uses offset-based paging rather than cursor-based because the list is short-lived and sorted by `created_at` — if your agent is generating enough runs that offset drift matters, you probably want the daily rollup table instead.)
 
 ### 7.2 Builds
 

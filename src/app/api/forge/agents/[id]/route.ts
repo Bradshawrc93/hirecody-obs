@@ -85,6 +85,8 @@ const PatchSchema = z.object({
     .regex(/^\d{2}:\d{2}:\d{2}$/)
     .nullable()
     .optional(),
+  schedule_day_of_week: z.number().int().min(0).max(6).nullable().optional(),
+  schedule_day_of_month: z.number().int().min(1).max(28).nullable().optional(),
   verified_email: z.string().email().nullable().optional(),
   last_run_at: z.string().datetime().nullable().optional(),
 });
@@ -135,14 +137,32 @@ export async function PATCH(
   if (p.config !== undefined) update.config = p.config;
   if (p.schedule_cadence !== undefined) update.schedule_cadence = p.schedule_cadence;
   if (p.schedule_time !== undefined) update.schedule_time = p.schedule_time;
+  if (p.schedule_day_of_week !== undefined)
+    update.schedule_day_of_week = p.schedule_day_of_week;
+  if (p.schedule_day_of_month !== undefined)
+    update.schedule_day_of_month = p.schedule_day_of_month;
   if (p.verified_email !== undefined) update.verified_email = p.verified_email;
   if (p.last_run_at !== undefined) update.last_run_at = p.last_run_at;
 
-  // Recompute next_run_at if either scheduling field changed.
-  if (p.schedule_cadence !== undefined || p.schedule_time !== undefined) {
+  // Recompute next_run_at if any scheduling field changed.
+  if (
+    p.schedule_cadence !== undefined ||
+    p.schedule_time !== undefined ||
+    p.schedule_day_of_week !== undefined ||
+    p.schedule_day_of_month !== undefined
+  ) {
     const cadence = p.schedule_cadence ?? authed.agent.schedule_cadence;
     const time = p.schedule_time ?? authed.agent.schedule_time;
-    update.next_run_at = computeNextRun(cadence, time)?.toISOString() ?? null;
+    const dow =
+      p.schedule_day_of_week !== undefined
+        ? p.schedule_day_of_week
+        : authed.agent.schedule_day_of_week;
+    const dom =
+      p.schedule_day_of_month !== undefined
+        ? p.schedule_day_of_month
+        : authed.agent.schedule_day_of_month;
+    update.next_run_at =
+      computeNextRun(cadence, time, new Date(), dow, dom)?.toISOString() ?? null;
   }
 
   // TOCTOU guard: if status is being changed, only update when the row

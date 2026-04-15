@@ -38,6 +38,8 @@ export interface ForgeAgentRow {
   context_text: string | null;
   schedule_cadence: ForgeScheduleCadence | null;
   schedule_time: string | null;
+  schedule_day_of_week: number | null;
+  schedule_day_of_month: number | null;
   last_run_at: string | null;
   next_run_at: string | null;
   creator_type: ForgeCreatorType;
