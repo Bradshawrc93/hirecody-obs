@@ -6,8 +6,8 @@ import { createServerClient } from "@supabase/ssr";
  * Supabase email magic-link redirect target.
  *
  * TEMP DIAGNOSTIC MODE: always redirects to /admin/login with a
- * diagnostic `error` query param so we can see, on prod, exactly what
- * the callback exchange did and which cookies it wrote.
+ * diagnostic `error` query param. Bypasses NextResponse.cookies.set()
+ * and writes raw Set-Cookie headers so we can see the exact bytes.
  */
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -21,10 +21,6 @@ export async function GET(req: Request) {
   const cookieStore = await cookies();
   const incomingNames = cookieStore.getAll().map((c) => c.name);
 
-  // We need to know the exchange result before we can build the final
-  // redirect URL (because the URL carries diagnostic info). Do the
-  // exchange first, collecting the cookies Supabase wants to set into
-  // an array, then build the final response and apply them all.
   type Pending = { name: string; value: string; options: Record<string, unknown> };
   const pending: Pending[] = [];
 
@@ -44,33 +40,44 @@ export async function GET(req: Request) {
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-  const writtenDetails = pending.map(
-    (c) =>
-      `${c.name}=len:${c.value.length} path:${c.options.path ?? "-"} dom:${c.options.domain ?? "-"} ss:${c.options.sameSite ?? "-"} sec:${c.options.secure ?? "-"} http:${c.options.httpOnly ?? "-"} max:${c.options.maxAge ?? "-"}`,
-  );
+  const isHttps = url.protocol === "https:";
+  const serialized = pending.map((c) => serializeCookie(c.name, c.value, c.options, isHttps));
 
   const msg = [
     `exchange=${error ? "err:" + error.message : "ok"}`,
     `incoming=[${incomingNames.join(",") || "none"}]`,
     `wrote=[${pending.map((c) => c.name).join(",") || "none"}]`,
-    `details=${writtenDetails.join(" ;; ") || "none"}`,
+    `rawSetCookie=${serialized.map((s) => `<${s}>`).join(" ;; ") || "none"}`,
   ].join(" | ");
 
   const finalUrl = new URL("/admin/login", url.origin);
   finalUrl.searchParams.set("error", msg);
   const response = NextResponse.redirect(finalUrl);
 
-  // Apply cookies to the final response object. Force Secure on HTTPS
-  // so the browser can't reject a mixed-attribute cookie.
-  const isHttps = url.protocol === "https:";
-  for (const { name, value, options } of pending) {
-    response.cookies.set({
-      name,
-      value,
-      ...options,
-      secure: isHttps ? true : Boolean(options.secure),
-    });
+  for (const sc of serialized) {
+    response.headers.append("Set-Cookie", sc);
   }
 
   return response;
+}
+
+function serializeCookie(
+  name: string,
+  value: string,
+  options: Record<string, unknown>,
+  isHttps: boolean,
+): string {
+  const parts = [`${name}=${encodeURIComponent(value)}`];
+  const path = (options.path as string | undefined) ?? "/";
+  parts.push(`Path=${path}`);
+  const maxAge = options.maxAge as number | undefined;
+  if (typeof maxAge === "number") parts.push(`Max-Age=${maxAge}`);
+  const sameSite = ((options.sameSite as string | undefined) ?? "lax").toLowerCase();
+  parts.push(`SameSite=${sameSite.charAt(0).toUpperCase()}${sameSite.slice(1)}`);
+  if (isHttps) parts.push("Secure");
+  // Supabase session cookies must be readable by the browser JS client,
+  // so we intentionally do NOT set HttpOnly.
+  const domain = options.domain as string | undefined;
+  if (domain) parts.push(`Domain=${domain}`);
+  return parts.join("; ");
 }
