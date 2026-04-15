@@ -7,14 +7,14 @@ import { cn } from "@/lib/utils";
 
 type Tone = "neutral" | "info" | "ok" | "warn" | "danger" | "anthropic" | "openai";
 
-const tones: Record<Tone, { bg: string; fg: string }> = {
-  neutral:   { bg: "#1F1F24", fg: "#C4C4CC" },
-  info:      { bg: "rgba(96,165,250,0.12)",  fg: "#60A5FA" },
-  ok:        { bg: "rgba(16,185,129,0.12)",  fg: "#34D399" },
-  warn:      { bg: "rgba(245,158,11,0.14)",  fg: "#F59E0B" },
-  danger:    { bg: "rgba(239,68,68,0.14)",   fg: "#F87171" },
-  anthropic: { bg: "rgba(245,158,11,0.12)",  fg: "#F59E0B" },
-  openai:    { bg: "rgba(16,185,129,0.12)",  fg: "#10B981" },
+const tones: Record<Tone, { bg: string; fg: string; border: string }> = {
+  neutral:   { bg: "#EDE5D8",                  fg: "#2B2B2B", border: "#E5DDD0" },
+  info:      { bg: "rgba(122,107,176,0.12)",   fg: "#5E4E94", border: "rgba(122,107,176,0.35)" },
+  ok:        { bg: "rgba(79,122,88,0.14)",     fg: "#3D6046", border: "rgba(79,122,88,0.35)" },
+  warn:      { bg: "rgba(197,106,45,0.14)",    fg: "#9E4F16", border: "rgba(197,106,45,0.35)" },
+  danger:    { bg: "rgba(176,74,59,0.14)",     fg: "#8C3829", border: "rgba(176,74,59,0.4)" },
+  anthropic: { bg: "rgba(197,106,45,0.12)",    fg: "#9E4F16", border: "rgba(197,106,45,0.35)" },
+  openai:    { bg: "rgba(79,122,88,0.12)",     fg: "#3D6046", border: "rgba(79,122,88,0.35)" },
 };
 
 export function Tag({
@@ -26,14 +26,14 @@ export function Tag({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { bg, fg } = tones[tone];
+  const { bg, fg, border } = tones[tone];
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md px-2 py-[2px] text-[0.7rem] font-semibold tnum",
+        "inline-flex items-center rounded-full border px-2 py-[2px] text-[0.7rem] font-semibold tnum",
         className,
       )}
-      style={{ backgroundColor: bg, color: fg }}
+      style={{ backgroundColor: bg, color: fg, borderColor: border }}
     >
       {children}
     </span>

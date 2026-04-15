@@ -1,40 +1,47 @@
 @import "tailwindcss";
 
 /*
- * Dark-first theme. Restrained monochrome base with provider-colored
- * accents — Linear / Vercel dashboard feel, tuned to look like a real
- * product, not a portfolio flex. Tabular numerals on every metric.
+ * Warm-light theme — matches hirecody.dev. Sand + charcoal base with
+ * burnt-orange accents. Variable *names* are preserved from the earlier
+ * dark theme so all consuming components keep working unchanged; only
+ * the values are flipped.
  */
 
 :root {
   /* Surfaces */
-  --bg:           #0A0A0B;  /* page background */
-  --bg-elev:      #111114;  /* card */
-  --bg-elev-2:    #16161A;  /* nested card / hover */
-  --border:       #1F1F24;
-  --border-soft:  #17171B;
+  --bg:           #FAF7F2;  /* page background — warm off-white */
+  --bg-elev:      #F1E9DD;  /* card — soft sand */
+  --bg-elev-2:    #EDE5D8;  /* nested / hover — darker sand */
+  --bg-hover:     #E4D8C5;  /* active hover fill */
+  --border:       #E5DDD0;  /* soft warm border */
+  --border-soft:  #ECE4D6;
 
   /* Text */
-  --fg:           #ECECEE;
-  --fg-muted:     #9A9AA4;
-  --fg-dim:       #5E5E68;
-  --fg-label:     #72727C;
+  --fg:           #2B2B2B;  /* charcoal */
+  --fg-muted:     #6B6B6B;
+  --fg-dim:       #8A8A84;
+  --fg-label:     #6B6B6B;
 
-  /* Accents */
-  --accent:       #E5E5EA;
-  --accent-anthropic: #F59E0B; /* warm amber */
-  --accent-openai:    #10B981; /* teal-green */
-  --accent-other:     #6366F1; /* violet fallback */
-  --danger:       #EF4444;
-  --warn:         #F59E0B;
-  --ok:           #10B981;
+  /* Accents — burnt orange primary, warmed secondaries */
+  --primary:      #C56A2D;
+  --primary-fg:   #FAF7F2;
+  --accent:       #C56A2D;
+  --accent-anthropic: #C56A2D;  /* warm terracotta */
+  --accent-openai:    #4F7A58;  /* muted olive-teal */
+  --accent-other:     #7A6BB0;  /* dusty violet */
+  --danger:       #B04A3B;
+  --warn:         #C56A2D;
+  --ok:           #4F7A58;
 }
 
 @theme inline {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-serif: "Lora", Georgia, serif;
   --color-background: var(--bg);
   --color-foreground: var(--fg);
   --color-muted: var(--fg-muted);
   --color-border: var(--border);
+  --color-primary: var(--primary);
 }
 
 * {
@@ -56,11 +63,17 @@ html, body {
   font-feature-settings: "tnum";
 }
 
+/* Serif display — used for page headings and hero metrics */
+.font-serif {
+  font-family: "Lora", Georgia, serif;
+  font-feature-settings: "tnum";
+}
+
 /* Reusable card shell */
 .card {
   background: var(--bg-elev);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 0.75rem;
 }
 
 .card-header {
@@ -73,6 +86,65 @@ html, body {
   color: var(--fg-label);
 }
 
+/* Hoverable card — darker sand + inset shadow on hover, matches hirecody */
+.card-hover {
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}
+.card-hover:hover {
+  background: var(--bg-hover);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Zone — rounded panel with radial-dot texture and pill label.
+   Used to group related cards on a page (matches hirecody portfolio). */
+.zone {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  padding: 2.5rem 1.25rem 1.25rem;
+  background-color: rgba(241, 233, 221, 0.35);
+  background-image: radial-gradient(circle, rgba(43, 43, 43, 0.08) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+@media (min-width: 768px) {
+  .zone {
+    padding: 3rem 2rem 2rem;
+  }
+}
+.zone-label {
+  position: absolute;
+  top: 0.75rem;
+  left: 1rem;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  background: rgba(250, 247, 242, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+}
+
+/* Section eyebrow — matches hirecody "— APPS" section header pattern */
+.section-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.section-eyebrow::before {
+  content: "";
+  display: block;
+  width: 2rem;
+  height: 1px;
+  background: var(--primary);
+}
+
 /* Subtle fade-in for new rows in Live Tail */
 @keyframes obs-fade-in {
   from { opacity: 0; transform: translateY(-2px); }
@@ -82,7 +154,13 @@ html, body {
   animation: obs-fade-in 220ms ease-out;
 }
 
-/* Scrollbar tuning */
+/* Scrollbar tuning — warm palette */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #2A2A32; }
+::-webkit-scrollbar-thumb:hover { background: #D4C9B3; }
+
+/* Native select — warm theme */
+select {
+  background: var(--bg-elev);
+  color: var(--fg);
+}

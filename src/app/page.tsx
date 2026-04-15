@@ -33,10 +33,13 @@ export default async function OverviewPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header>
-        <h1 className="text-[1.5rem] font-semibold tracking-tight">Overview</h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
+        <div className="section-eyebrow mb-3">Dashboard</div>
+        <h1 className="font-serif text-[2rem] md:text-[2.4rem] font-semibold tracking-tight leading-tight">
+          Overview
+        </h1>
+        <p className="mt-2 text-sm" style={{ color: "var(--fg-muted)" }}>
           What every model costs, every app is using, every day — in one place.
         </p>
       </header>

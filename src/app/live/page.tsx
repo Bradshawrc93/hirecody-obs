@@ -8,7 +8,8 @@ export default async function LivePage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-[1.5rem] font-semibold tracking-tight">Live Tail</h1>
+        <div className="section-eyebrow mb-3">Stream</div>
+        <h1 className="font-serif text-[1.9rem] font-semibold tracking-tight leading-tight">Live Tail</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
           Real-time event stream. 2-second polling. Newest at the top.
         </p>

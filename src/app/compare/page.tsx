@@ -56,7 +56,8 @@ export default async function ComparePage({
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-[1.5rem] font-semibold tracking-tight">Model Comparison</h1>
+          <div className="section-eyebrow mb-3">Analysis</div>
+          <h1 className="font-serif text-[1.9rem] font-semibold tracking-tight leading-tight">Model Comparison</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
             Side-by-side performance for every model used in the selected scope.
           </p>
@@ -156,9 +157,9 @@ function Row({
 }) {
   const color =
     highlight === "win"
-      ? "#34D399"
+      ? "#3D6046"
       : highlight === "lose"
-        ? "#F87171"
+        ? "#8C3829"
         : "var(--fg)";
   return (
     <div className="flex items-baseline justify-between">

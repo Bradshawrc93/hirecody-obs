@@ -18,7 +18,8 @@ export default async function AdminPricingPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-[1.5rem] font-semibold tracking-tight">Pricing Table</h1>
+        <div className="section-eyebrow mb-3">Admin</div>
+        <h1 className="font-serif text-[1.9rem] font-semibold tracking-tight leading-tight">Pricing Table</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
           Historical events are immutable. Each new row applies only to events logged after its effective_from.
         </p>

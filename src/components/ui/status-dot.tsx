@@ -9,10 +9,10 @@
 type Tone = "ok" | "warn" | "idle" | "error";
 
 const colors: Record<Tone, string> = {
-  ok:    "#10B981",
-  warn:  "#F59E0B",
-  idle:  "#4B4B55",
-  error: "#EF4444",
+  ok:    "#4F7A58",
+  warn:  "#C56A2D",
+  idle:  "#C2B8A4",
+  error: "#B04A3B",
 };
 
 export function StatusDot({ tone, title }: { tone: Tone; title?: string }) {

@@ -71,7 +71,7 @@ export default function AdminLoginPage() {
                 {busy ? "Sending…" : "Send magic link"}
               </button>
               {error ? (
-                <div className="text-xs" style={{ color: "#F87171" }}>
+                <div className="text-xs" style={{ color: "#8C3829" }}>
                   {error}
                 </div>
               ) : null}

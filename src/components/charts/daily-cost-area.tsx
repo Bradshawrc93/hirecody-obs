@@ -28,27 +28,28 @@ export function DailyCostArea({
     <div style={{ width: "100%", height: 260 }}>
       <ResponsiveContainer>
         <AreaChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="#1A1A20" vertical={false} />
+          <CartesianGrid stroke="#E5DDD0" vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fill: "#6E6E78", fontSize: 11 }}
+            tick={{ fill: "#6B6B6B", fontSize: 11 }}
             tickFormatter={(v) => String(v).slice(5)}
-            axisLine={{ stroke: "#222228" }}
+            axisLine={{ stroke: "#E5DDD0" }}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: "#6E6E78", fontSize: 11 }}
+            tick={{ fill: "#6B6B6B", fontSize: 11 }}
             tickFormatter={(v) => formatUsd(Number(v))}
-            axisLine={{ stroke: "#222228" }}
+            axisLine={{ stroke: "#E5DDD0" }}
             tickLine={false}
             width={60}
           />
           <Tooltip
             contentStyle={{
-              background: "#111114",
-              border: "1px solid #1F1F24",
+              background: "#FAF7F2",
+              border: "1px solid #E5DDD0",
               borderRadius: 8,
               fontSize: 12,
+              color: "#2B2B2B",
             }}
             formatter={(v, name) => [formatUsd(Number(v)), String(name)]}
           />
@@ -61,7 +62,7 @@ export function DailyCostArea({
               name={a.display_name}
               stroke={appColor(a.slug)}
               fill={appColor(a.slug)}
-              fillOpacity={0.28}
+              fillOpacity={0.4}
               strokeWidth={1.5}
             />
           ))}

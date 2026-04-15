@@ -32,12 +32,12 @@ export function MetricCard({
       ) : null}
       <div className="relative p-5">
         <div
-          className="text-[0.68rem] font-semibold uppercase tracking-[0.09em]"
+          className="text-[0.68rem] font-semibold uppercase tracking-[0.12em]"
           style={{ color: "var(--fg-label)" }}
         >
           {label}
         </div>
-        <div className="mt-3 text-[2rem] font-semibold tnum leading-none">
+        <div className="mt-3 font-serif text-[2.1rem] font-semibold tnum leading-none">
           {value}
         </div>
         {delta ? (

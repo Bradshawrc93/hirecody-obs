@@ -35,9 +35,9 @@ export function BudgetBanner({ apps }: { apps: OverBudgetApp[] }) {
   const worst = apps[0];
   const severity =
     worst.mtd_cost_usd >= worst.monthly_budget_usd * 1.25 ? "danger" : "warn";
-  const bg = severity === "danger" ? "rgba(239,68,68,0.10)" : "rgba(245,158,11,0.10)";
-  const fg = severity === "danger" ? "#F87171" : "#FBBF24";
-  const border = severity === "danger" ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.3)";
+  const bg = severity === "danger" ? "rgba(176,74,59,0.10)" : "rgba(197,106,45,0.10)";
+  const fg = severity === "danger" ? "#8C3829" : "#9E4F16";
+  const border = severity === "danger" ? "rgba(176,74,59,0.35)" : "rgba(197,106,45,0.35)";
 
   const label =
     apps.length === 1

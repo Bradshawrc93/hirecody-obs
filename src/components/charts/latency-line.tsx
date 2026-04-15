@@ -18,34 +18,35 @@ export function LatencyLine({ data }: { data: LatencyPoint[] }) {
     <div style={{ width: "100%", height: 220 }}>
       <ResponsiveContainer>
         <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="#1A1A20" vertical={false} />
+          <CartesianGrid stroke="#E5DDD0" vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fill: "#6E6E78", fontSize: 11 }}
+            tick={{ fill: "#6B6B6B", fontSize: 11 }}
             tickFormatter={(v) => String(v).slice(5)}
-            axisLine={{ stroke: "#222228" }}
+            axisLine={{ stroke: "#E5DDD0" }}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: "#6E6E78", fontSize: 11 }}
+            tick={{ fill: "#6B6B6B", fontSize: 11 }}
             tickFormatter={(v) => formatMs(Number(v))}
-            axisLine={{ stroke: "#222228" }}
+            axisLine={{ stroke: "#E5DDD0" }}
             tickLine={false}
             width={60}
           />
           <Tooltip
             contentStyle={{
-              background: "#111114",
-              border: "1px solid #1F1F24",
+              background: "#FAF7F2",
+              border: "1px solid #E5DDD0",
               borderRadius: 8,
               fontSize: 12,
+              color: "#2B2B2B",
             }}
             formatter={(v, name) => [formatMs(Number(v)), String(name)]}
           />
           <Line
             type="monotone"
             dataKey="p50"
-            stroke="#ECECEE"
+            stroke="#2B2B2B"
             strokeWidth={2}
             dot={false}
             name="p50"
@@ -53,7 +54,7 @@ export function LatencyLine({ data }: { data: LatencyPoint[] }) {
           <Line
             type="monotone"
             dataKey="p95"
-            stroke="#6E6E78"
+            stroke="#C56A2D"
             strokeWidth={1.5}
             dot={false}
             name="p95"

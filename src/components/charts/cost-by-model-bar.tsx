@@ -23,29 +23,30 @@ export function CostByModelBar({ data }: { data: ModelPoint[] }) {
           layout="vertical"
           margin={{ top: 8, right: 16, left: 16, bottom: 0 }}
         >
-          <CartesianGrid stroke="#1A1A20" horizontal={false} />
+          <CartesianGrid stroke="#E5DDD0" horizontal={false} />
           <XAxis
             type="number"
-            tick={{ fill: "#6E6E78", fontSize: 11 }}
+            tick={{ fill: "#6B6B6B", fontSize: 11 }}
             tickFormatter={(v) => formatUsd(Number(v))}
-            axisLine={{ stroke: "#222228" }}
+            axisLine={{ stroke: "#E5DDD0" }}
             tickLine={false}
           />
           <YAxis
             type="category"
             dataKey="model"
-            tick={{ fill: "#C4C4CC", fontSize: 11 }}
-            axisLine={{ stroke: "#222228" }}
+            tick={{ fill: "#2B2B2B", fontSize: 11 }}
+            axisLine={{ stroke: "#E5DDD0" }}
             tickLine={false}
             width={130}
           />
           <Tooltip
-            cursor={{ fill: "#1A1A20" }}
+            cursor={{ fill: "rgba(229, 221, 208, 0.5)" }}
             contentStyle={{
-              background: "#111114",
-              border: "1px solid #1F1F24",
+              background: "#FAF7F2",
+              border: "1px solid #E5DDD0",
               borderRadius: 8,
               fontSize: 12,
+              color: "#2B2B2B",
             }}
             formatter={(v) => formatUsd(Number(v))}
           />

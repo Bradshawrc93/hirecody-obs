@@ -14,7 +14,8 @@ export default async function AppsPage() {
     <div className="space-y-6">
       <header className="flex items-end justify-between">
         <div>
-          <h1 className="text-[1.5rem] font-semibold tracking-tight">Apps</h1>
+          <div className="section-eyebrow mb-3">Portfolio</div>
+          <h1 className="font-serif text-[1.9rem] font-semibold tracking-tight leading-tight">Apps</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
             Every app sending events into the collector, with MTD cost and activity.
           </p>
@@ -38,7 +39,7 @@ export default async function AppsPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {apps.map(({ app, mtd_cost, mtd_calls, primary_model, status }) => (
             <Link key={app.id} href={`/apps/${app.slug}`} className="group">
-              <Card className="p-5 transition-colors group-hover:bg-[var(--bg-elev-2)]">
+              <Card className="card-hover p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <StatusDot

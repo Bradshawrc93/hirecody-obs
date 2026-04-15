@@ -15,7 +15,8 @@ export default async function AdminAppsPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-[1.5rem] font-semibold tracking-tight">Apps & API Keys</h1>
+        <div className="section-eyebrow mb-3">Admin</div>
+        <h1 className="font-serif text-[1.9rem] font-semibold tracking-tight leading-tight">Apps & API Keys</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
           Register new apps, rotate keys, set per-app budgets.
         </p>

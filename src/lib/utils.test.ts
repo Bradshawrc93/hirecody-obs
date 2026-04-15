@@ -76,7 +76,7 @@ describe("providerColor", () => {
     expect(providerColor("Anthropic")).toBe(providerColor("anthropic"));
   });
   it("falls back for unknown providers", () => {
-    expect(providerColor("mystery")).toBe("#6366F1");
+    expect(providerColor("mystery")).toBe("#7A6BB0");
   });
 });
 

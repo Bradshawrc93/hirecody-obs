@@ -33,7 +33,7 @@ export default async function AdminHomePage() {
         <div className="inline-flex items-center gap-2 text-[0.7rem] uppercase tracking-wider" style={{ color: "var(--fg-muted)" }}>
           <ShieldCheck size={14} /> Admin
         </div>
-        <h1 className="mt-1 text-[1.5rem] font-semibold tracking-tight">Admin home</h1>
+        <h1 className="mt-1 font-serif text-[1.9rem] font-semibold tracking-tight leading-tight">Admin home</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
           Tools the public dashboard intentionally hides.
         </p>
@@ -43,7 +43,7 @@ export default async function AdminHomePage() {
           const Icon = c.icon;
           return (
             <Link key={c.href} href={c.href} className="group">
-              <Card className="p-5 transition-colors group-hover:bg-[var(--bg-elev-2)]">
+              <Card className="card-hover p-5">
                 <Icon size={18} className="mb-3" />
                 <div className="text-sm font-semibold">{c.title}</div>
                 <div className="mt-1 text-xs leading-relaxed" style={{ color: "var(--fg-muted)" }}>

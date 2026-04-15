@@ -151,7 +151,7 @@ export function AppsAdmin({ apps }: { apps: AppRow[] }) {
                     <button
                       onClick={() => deleteApp(a.id)}
                       className="ml-2 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[0.7rem]"
-                      style={{ borderColor: "var(--border)", color: "#F87171" }}
+                      style={{ borderColor: "var(--border)", color: "#8C3829" }}
                     >
                       <Trash2 size={12} /> Delete
                     </button>

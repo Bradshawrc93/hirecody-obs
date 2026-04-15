@@ -37,7 +37,7 @@ export default async function AppDetailPage({
           >
             <ChevronLeft size={14} /> Apps
           </Link>
-          <h1 className="mt-1 text-[1.5rem] font-semibold tracking-tight">{slug}</h1>
+          <h1 className="mt-1 font-serif text-[1.9rem] font-semibold tracking-tight leading-tight">{slug}</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
             Per-app metrics over the selected range.
           </p>
@@ -62,7 +62,7 @@ export default async function AppDetailPage({
               data={stats.calls_over_time}
               xKey="date"
               yKey="calls"
-              color="#60A5FA"
+              color="#7A6BB0"
             />
           </div>
         </Card>
@@ -73,7 +73,7 @@ export default async function AppDetailPage({
               data={stats.cost_over_time}
               xKey="date"
               yKey="cost"
-              color="#F59E0B"
+              color="#C56A2D"
               yFormat="usd"
             />
           </div>
@@ -99,7 +99,7 @@ export default async function AppDetailPage({
               data={stats.error_rate_over_time}
               xKey="date"
               yKey="rate"
-              color="#EF4444"
+              color="#B04A3B"
               yFormat="percent"
             />
           </div>

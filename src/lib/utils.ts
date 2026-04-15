@@ -37,17 +37,26 @@ export function formatMs(ms: number | null | undefined): string {
 /** Provider → canonical accent color (matches CSS vars in globals.css). */
 export function providerColor(provider: string): string {
   switch (provider.toLowerCase()) {
-    case "anthropic": return "#F59E0B";
-    case "openai":    return "#10B981";
-    default:          return "#6366F1";
+    case "anthropic": return "#C56A2D"; // burnt orange — primary
+    case "openai":    return "#4F7A58"; // muted olive-teal
+    default:          return "#7A6BB0"; // dusty violet
   }
 }
 
-/** Stable palette for apps on stacked charts — hashed from app id/slug. */
+/** Stable palette for apps on stacked charts — hashed from app id/slug.
+ *  Warm earth tones tuned to sit on a sand background. */
 export function appColor(seed: string): string {
   const palette = [
-    "#60A5FA", "#F59E0B", "#10B981", "#A78BFA", "#F472B6",
-    "#34D399", "#FB7185", "#FBBF24", "#818CF8", "#2DD4BF",
+    "#C56A2D", // burnt orange
+    "#4F7A58", // olive-teal
+    "#7A6BB0", // dusty violet
+    "#B08A3E", // warm ochre
+    "#8C3829", // deep terracotta
+    "#3D6046", // forest
+    "#9E4F16", // rust
+    "#5E4E94", // muted indigo
+    "#C2925A", // sandstone
+    "#5A7A8C", // slate blue
   ];
   let hash = 0;
   for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;

@@ -25,7 +25,8 @@ export default async function TopQueriesPage({
     <div className="space-y-6">
       <header className="flex items-end justify-between">
         <div>
-          <h1 className="text-[1.5rem] font-semibold tracking-tight">Top Queries</h1>
+          <div className="section-eyebrow mb-3">Prompts</div>
+          <h1 className="font-serif text-[1.9rem] font-semibold tracking-tight leading-tight">Top Queries</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
             Most common prompts sent into your apps, grouped by normalized text.
           </p>
