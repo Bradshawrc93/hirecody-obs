@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { Card, CardHeader } from "@/components/ui/card";
 
@@ -15,6 +16,17 @@ import { Card, CardHeader } from "@/components/ui/card";
  * wasted Supabase emails.
  */
 export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-md p-8 text-sm" style={{ color: "var(--fg-muted)" }}>Loading…</div>}>
+      <AdminLoginInner />
+    </Suspense>
+  );
+}
+
+function AdminLoginInner() {
+  const searchParams = useSearchParams();
+  const callbackError = searchParams.get("error");
+
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +57,11 @@ export default function AdminLoginPage() {
       <Card>
         <CardHeader title="Admin sign-in" />
         <div className="p-6">
+          {callbackError ? (
+            <div className="mb-3 text-xs" style={{ color: "#8C3829" }}>
+              {callbackError}
+            </div>
+          ) : null}
           {sent ? (
             <div className="text-sm" style={{ color: "var(--fg-muted)" }}>
               Check your inbox — a one-time sign-in link is on its way.
