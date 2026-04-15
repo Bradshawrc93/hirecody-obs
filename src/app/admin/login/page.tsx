@@ -1,22 +1,20 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { Card, CardHeader } from "@/components/ui/card";
 
+/**
+ * Admin login — Supabase email magic link.
+ *
+ * Only the address in ADMIN_EMAIL is allowed in. Even if a stranger
+ * submits the form with their own email, Supabase will happily send a
+ * link to that address, but the `isAdmin()` guard in the layout checks
+ * the signed-in user's email against the allowlist — so a stranger's
+ * session gets them nothing. We still gate the form client-side to avoid
+ * wasted Supabase emails.
+ */
 export default function AdminLoginPage() {
-  return (
-    <Suspense>
-      <LoginInner />
-    </Suspense>
-  );
-}
-
-function LoginInner() {
-  const sp = useSearchParams();
-  const bounceReason = sp.get("reason");
-  const bounceDetail = sp.get("detail");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,15 +45,6 @@ function LoginInner() {
       <Card>
         <CardHeader title="Admin sign-in" />
         <div className="p-6">
-          {bounceReason ? (
-            <div
-              className="mb-3 rounded border px-3 py-2 text-xs"
-              style={{ borderColor: "var(--border)", color: "var(--fg-muted)" }}
-            >
-              <div><strong>Bounced:</strong> {bounceReason}</div>
-              {bounceDetail ? <div className="mt-1 break-all">{bounceDetail}</div> : null}
-            </div>
-          ) : null}
           {sent ? (
             <div className="text-sm" style={{ color: "var(--fg-muted)" }}>
               Check your inbox — a one-time sign-in link is on its way.
