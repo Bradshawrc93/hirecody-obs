@@ -131,9 +131,11 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
         style={{ borderColor: "var(--border-soft)", color: "var(--fg-dim)" }}
       >
         {isAdmin ? (
-          <Link href="/admin/logout" className="hover:text-[var(--fg)]">
-            Sign out
-          </Link>
+          <form action="/admin/logout" method="post">
+            <button type="submit" className="hover:text-[var(--fg)]">
+              Sign out
+            </button>
+          </form>
         ) : (
           <Link href="/admin/login" className="hover:text-[var(--fg)]">
             Admin login
