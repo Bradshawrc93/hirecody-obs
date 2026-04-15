@@ -24,6 +24,7 @@ export async function GET(req: Request) {
   );
 
   const writtenNames: string[] = [];
+  const writtenDetails: string[] = [];
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -34,6 +35,10 @@ export async function GET(req: Request) {
           toSet.forEach(({ name, value, options }) => {
             response.cookies.set({ name, value, ...options });
             writtenNames.push(name);
+            const opts = options ?? {};
+            writtenDetails.push(
+              `${name}=len:${value.length} path:${opts.path ?? "-"} dom:${opts.domain ?? "-"} ss:${opts.sameSite ?? "-"} sec:${opts.secure ?? "-"} http:${opts.httpOnly ?? "-"} max:${opts.maxAge ?? "-"}`,
+            );
           }),
       },
     },
@@ -47,6 +52,7 @@ export async function GET(req: Request) {
     `incoming=[${incomingNames.join(",") || "none"}]`,
     `wrote=[${writtenNames.join(",") || "none"}]`,
     `onResp=[${onResponse.join(",") || "none"}]`,
+    `details=${writtenDetails.join(" ;; ") || "none"}`,
   ].join(" | ");
 
   const finalUrl = new URL("/admin/login", url.origin);
