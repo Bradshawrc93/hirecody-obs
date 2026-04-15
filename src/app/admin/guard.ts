@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createSsrClient } from "@/lib/supabase/ssr";
 
 /**
@@ -13,6 +14,9 @@ export async function requireAdmin() {
 }
 
 async function adminGateReason(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const cookieNames = cookieStore.getAll().map((c) => c.name).join(",") || "(none)";
+
   let supabase;
   try {
     supabase = await createSsrClient();
@@ -21,8 +25,8 @@ async function adminGateReason(): Promise<string | null> {
   }
 
   const { data, error } = await supabase.auth.getUser();
-  if (error) return `getUser error: ${error.message}`;
-  if (!data.user) return "no session cookie on request";
+  if (error) return `getUser error: ${error.message} | cookies: ${cookieNames}`;
+  if (!data.user) return `no session cookie | cookies: ${cookieNames}`;
   if (!data.user.email) return "session has no email";
 
   const allow = (process.env.ADMIN_EMAIL ?? "").toLowerCase();
