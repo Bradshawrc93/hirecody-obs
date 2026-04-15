@@ -1,10 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { Card, CardHeader } from "@/components/ui/card";
 
 export default function AdminLoginPage() {
+  return (
+    <Suspense>
+      <LoginInner />
+    </Suspense>
+  );
+}
+
+function LoginInner() {
+  const sp = useSearchParams();
+  const bounceReason = sp.get("reason");
+  const bounceDetail = sp.get("detail");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +47,15 @@ export default function AdminLoginPage() {
       <Card>
         <CardHeader title="Admin sign-in" />
         <div className="p-6">
+          {bounceReason ? (
+            <div
+              className="mb-3 rounded border px-3 py-2 text-xs"
+              style={{ borderColor: "var(--border)", color: "var(--fg-muted)" }}
+            >
+              <div><strong>Bounced:</strong> {bounceReason}</div>
+              {bounceDetail ? <div className="mt-1 break-all">{bounceDetail}</div> : null}
+            </div>
+          ) : null}
           {sent ? (
             <div className="text-sm" style={{ color: "var(--fg-muted)" }}>
               Check your inbox — a one-time sign-in link is on its way.

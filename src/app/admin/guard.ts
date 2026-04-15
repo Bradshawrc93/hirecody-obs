@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/supabase/ssr";
+import { adminCheck } from "@/lib/supabase/ssr";
 
 /**
  * Gate helper for server components and route handlers that must only
@@ -7,5 +7,10 @@ import { isAdmin } from "@/lib/supabase/ssr";
  * isn't the allowlisted admin email.
  */
 export async function requireAdmin() {
-  if (!(await isAdmin())) redirect("/admin/login");
+  const result = await adminCheck();
+  if (!result.ok) {
+    const params = new URLSearchParams({ reason: result.reason });
+    if (result.detail) params.set("detail", result.detail);
+    redirect(`/admin/login?${params.toString()}`);
+  }
 }

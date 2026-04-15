@@ -37,12 +37,24 @@ export async function createSsrClient() {
  * matches the configured ADMIN_EMAIL allowlist (single-user project).
  */
 export async function isAdmin(): Promise<boolean> {
+  return (await adminCheck()).ok;
+}
+
+export async function adminCheck(): Promise<
+  | { ok: true; email: string }
+  | { ok: false; reason: "no-session" | "email-mismatch" | "error"; detail?: string }
+> {
   try {
     const supabase = await createSsrClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.email) return false;
-    return user.email.toLowerCase() === (process.env.ADMIN_EMAIL ?? "").toLowerCase();
-  } catch {
-    return false;
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) return { ok: false, reason: "error", detail: error.message };
+    if (!user?.email) return { ok: false, reason: "no-session" };
+    const allow = (process.env.ADMIN_EMAIL ?? "").toLowerCase();
+    if (user.email.toLowerCase() !== allow) {
+      return { ok: false, reason: "email-mismatch", detail: `${user.email} vs ${allow || "<unset>"}` };
+    }
+    return { ok: true, email: user.email };
+  } catch (e) {
+    return { ok: false, reason: "error", detail: e instanceof Error ? e.message : String(e) };
   }
 }
