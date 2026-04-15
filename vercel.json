@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/forge/cron/dispatch",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/forge/cron/rollup",
+      "schedule": "10 0 * * *"
+    },
+    {
+      "path": "/api/forge/cron/expire",
+      "schedule": "20 0 * * *"
+    }
+  ]
+}
