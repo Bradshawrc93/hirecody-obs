@@ -3,6 +3,8 @@ import { ShieldCheck, Boxes, ListOrdered, LayoutDashboard } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { requireAdmin } from "./guard";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminHomePage() {
   await requireAdmin();
 
