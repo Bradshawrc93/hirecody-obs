@@ -506,6 +506,44 @@ Response: `{ "ok": true, "email": "user@example.com" }`
 
 Errors: `404` (no pending code), `410` (expired), `429` (>5 wrong tries on a single code), `401` (wrong code). After verifying, pass the email to `PATCH /api/forge/agents/[id]` as `verified_email` to persist it on the agent.
 
+#### `POST /api/forge/email/send-result`
+
+**Authenticated.** Sends an email to the agent's `verified_email`, using the same Resend sender as the verification flow. Intended to be called from inside an agent run (e.g., a news-digest agent emailing its output to the creator).
+
+Request:
+
+```json
+{
+  "subject": "Your Daily News Digest",
+  "body": "Here are today's top 5 stories...",
+  "format": "text"
+}
+```
+
+- `subject` — required, 1–200 chars.
+- `body` — required, 1–200,000 chars.
+- `format` — optional, `"text"` (default) or `"html"`. When `"html"`, `body` is delivered as the HTML body of the email.
+
+No attachments, CC, or BCC — a single email to the verified address.
+
+Response:
+
+```json
+{ "ok": true, "message_id": "<resend-message-id>" }
+```
+
+Errors:
+
+| Status | Meaning |
+|---|---|
+| `401` | Missing/invalid `x-api-key`, or key doesn't belong to a Forge agent. |
+| `400` | Missing/invalid `subject`, `body`, or `format`. |
+| `403` | Agent does not have `can_send_email` enabled, or has no `verified_email` set. |
+| `429` | Rate limit exceeded (see below). |
+| `502` | Resend delivery failed. The send did not happen; safe to retry after fixing the root cause. |
+
+Rate limit: **max 10 emails per agent per rolling 24-hour window** → `429`. This is a hard guardrail against a runaway scheduled agent spamming the creator's inbox. There is no way to raise the limit per-agent — if you hit it, the agent design needs to change (batch multiple results into one email, send weekly instead of daily, etc.).
+
 ### 7.6 Feedback
 
 #### `POST /api/forge/feedback`

@@ -51,3 +51,45 @@ export async function sendVerificationEmail(
     throw new Error(`resend failed: ${res.status} ${text}`);
   }
 }
+
+/**
+ * Deliver an agent-generated email to the creator's verified address.
+ * Uses the same Resend account as the verification flow; falls back to
+ * logging in dev when RESEND_API_KEY is unset. Returns the Resend
+ * message id on success.
+ */
+export async function sendAgentResultEmail(
+  to: string,
+  subject: string,
+  body: string,
+  format: "text" | "html",
+): Promise<string> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.FORGE_VERIFICATION_FROM ?? "forge@hirecody.dev";
+
+  if (!apiKey) {
+    console.log(`[forge:email] (dev) agent email to ${to}: ${subject}`);
+    return "dev-no-resend";
+  }
+
+  const payload: Record<string, unknown> = { from, to, subject };
+  if (format === "html") payload.html = body;
+  else payload.text = body;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`resend failed: ${res.status} ${text}`);
+  }
+
+  const json = (await res.json().catch(() => ({}))) as { id?: string };
+  return json.id ?? "";
+}
