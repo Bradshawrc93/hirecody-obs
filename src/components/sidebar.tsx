@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Menu,
   X,
+  Radio,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,7 @@ const adminNav: NavItem[] = [
   { href: "/admin/events",   label: "Events",        icon: ListOrdered },
   { href: "/admin/apps",     label: "Apps & Keys",   icon: Boxes },
   { href: "/admin/pricing",  label: "Pricing Table", icon: LayoutDashboard },
+  { href: "/admin/beacon",   label: "Beacon",        icon: Radio },
 ];
 
 export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {

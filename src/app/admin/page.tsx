@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Boxes, ListOrdered, LayoutDashboard } from "lucide-react";
+import { ShieldCheck, Boxes, ListOrdered, LayoutDashboard, Radio } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { requireAdmin } from "./guard";
 
@@ -26,6 +26,12 @@ export default async function AdminHomePage() {
       title: "Pricing Table",
       blurb: "Add new per-1K rates. Applies to future events only.",
       icon: LayoutDashboard,
+    },
+    {
+      href: "/admin/beacon",
+      title: "Beacon",
+      blurb: "Manage Beacon products, build releases, and edit published history.",
+      icon: Radio,
     },
   ];
 
