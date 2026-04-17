@@ -52,6 +52,7 @@ export type BeaconDraft = {
 
 export type BeaconRelease = {
   product_slug: string;
+  product_name?: string;
   version: string;
   type: "major" | "minor";
   published_at: string;

@@ -27,7 +27,10 @@ export function ReleasesAdmin({ releases }: { releases: BeaconRelease[] }) {
         ) : (
           Object.entries(grouped).map(([slug, rows]) => (
             <Card key={slug}>
-              <CardHeader title={slug} right={<span className="text-[0.7rem]" style={{ color: "var(--fg-dim)" }}>{rows.length} releases</span>} />
+              <CardHeader
+                title={rows[0]?.product_name ?? slug}
+                right={<span className="text-[0.7rem]" style={{ color: "var(--fg-dim)" }}>{rows.length} releases</span>}
+              />
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] text-sm">
                   <thead>

@@ -12,8 +12,13 @@ export default async function BeaconReleasesPage() {
   let releases: BeaconRelease[] = [];
   let error: string | null = null;
   try {
-    const body = await beaconGet<{ releases: BeaconRelease[] }>("/api/admin/releases");
-    releases = body.releases ?? [];
+    // Beacon returns one entry per product, each with its own releases[].
+    const body = await beaconGet<{
+      products: { slug: string; name: string; releases: Omit<BeaconRelease, "product_slug" | "product_name">[] }[];
+    }>("/api/admin/releases");
+    releases = (body.products ?? []).flatMap((p) =>
+      p.releases.map((r) => ({ ...r, product_slug: p.slug, product_name: p.name })),
+    );
   } catch (err) {
     error = err instanceof BeaconError ? `Beacon ${err.status}` : (err as Error).message;
   }
