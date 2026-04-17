@@ -1,10 +1,12 @@
 import { createSsrClient } from "@/lib/supabase/ssr";
 
 /**
- * Beacon API client. Beacon admin endpoints trust the `x-admin-email`
- * header — the boundary is that this header is only ever attached
- * server-side after we re-verify the caller is the configured admin.
- * The raw Beacon URL never reaches the browser.
+ * Beacon API client. Beacon admin endpoints are gated by a shared
+ * service secret (`BEACON_ADMIN_KEY`) — possession of the key proves
+ * the caller is the Obs service. The proxy in front of this helper
+ * still re-verifies the Obs admin session on every call, so only an
+ * Obs admin can trigger a Beacon admin call. The key never reaches
+ * the browser.
  */
 
 export class BeaconError extends Error {
@@ -39,19 +41,26 @@ export async function getAdminEmail(): Promise<string | null> {
 
 type BeaconInit = RequestInit & {
   json?: unknown;
+  /** Optional — included as `x-admin-email` for Beacon's audit trail only. */
   adminEmail?: string;
 };
 
 /**
- * Server-only fetch against the Beacon API. Requires an admin session;
- * pass `adminEmail` explicitly to skip the cookie lookup (used by the
- * proxy route after it has already verified isAdmin).
+ * Server-only fetch against the Beacon API. Requires the Obs admin
+ * session (or an explicit `adminEmail` from a caller that has already
+ * verified it) AND a configured `BEACON_ADMIN_KEY` shared secret.
  */
 export async function beaconFetch(path: string, init: BeaconInit = {}): Promise<Response> {
   const email = init.adminEmail ?? (await getAdminEmail());
   if (!email) throw new BeaconError(403, { error: "forbidden" }, "not an admin");
 
+  const adminKey = process.env.BEACON_ADMIN_KEY;
+  if (!adminKey) throw new Error("BEACON_ADMIN_KEY not configured");
+
   const headers = new Headers(init.headers);
+  headers.set("x-beacon-admin-key", adminKey);
+  // Sent for Beacon's audit log so it can record which Obs admin acted.
+  // Beacon does not authenticate based on this header.
   headers.set("x-admin-email", email);
   if (init.json !== undefined && !headers.has("content-type")) {
     headers.set("content-type", "application/json");
