@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { getOverviewData } from "@/lib/overview";
-import { Card } from "@/components/ui/card";
 import { StatusDot } from "@/components/ui/status-dot";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { ValueDeliveredHero } from "@/components/value-delivered-hero";
 import { AppPickerPills } from "@/components/app-picker-pills";
 import { FlagCallouts } from "@/components/flag-callouts";
 import { Sparkline } from "@/components/charts/sparkline";
+import { ValueByAppBar } from "@/components/charts/value-by-app-bar";
+import { UsageByAppArea } from "@/components/charts/usage-by-app-area";
+import { Card, CardHeader } from "@/components/ui/card";
 import { formatUsd, formatCompact } from "@/lib/utils";
 
 /**
@@ -84,6 +86,48 @@ export default async function OverviewPage({
           <FlagCallouts flags={data.flags} />
         </section>
       ) : null}
+
+      {/* Value & usage visuals */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader
+            title="Value vs spend, per app"
+            right={
+              <span className="text-[0.7rem]" style={{ color: "var(--fg-dim)" }}>
+                green = value · orange = spend
+              </span>
+            }
+          />
+          <div className="p-4">
+            <ValueByAppBar
+              data={data.value.breakdown.map((b) => {
+                const app = data.apps.find((a) => a.slug === b.app_slug);
+                return {
+                  app: b.display_name,
+                  value_usd: b.value_usd,
+                  spend_usd: app?.cost_usd ?? 0,
+                };
+              })}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardHeader
+            title={`Usage per day · ${rangeLabel(days)}`}
+            right={
+              <span className="text-[0.7rem]" style={{ color: "var(--fg-dim)" }}>
+                events + runs
+              </span>
+            }
+          />
+          <div className="p-4">
+            <UsageByAppArea
+              data={data.usage_by_app.points}
+              keys={data.usage_by_app.keys}
+            />
+          </div>
+        </Card>
+      </div>
 
       {/* Portfolio scorecard */}
       <Card>

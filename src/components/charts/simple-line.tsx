@@ -8,6 +8,7 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  ReferenceLine,
 } from "recharts";
 import { formatUsd } from "@/lib/utils";
 
@@ -27,6 +28,8 @@ export function SimpleLine({
   yFormat = "number",
   color = "#C56A2D",
   height = 200,
+  baseline,
+  baselineLabel,
 }: {
   data: Array<Record<string, number | string>>;
   xKey: string;
@@ -34,6 +37,8 @@ export function SimpleLine({
   yFormat?: YFormat;
   color?: string;
   height?: number;
+  baseline?: number;
+  baselineLabel?: string;
 }) {
   return (
     <div style={{ width: "100%", height }}>
@@ -64,6 +69,20 @@ export function SimpleLine({
             }}
             formatter={(v) => formatY(Number(v), yFormat)}
           />
+          {baseline != null && baseline > 0 ? (
+            <ReferenceLine
+              y={baseline}
+              stroke="#8A7F6E"
+              strokeDasharray="4 4"
+              ifOverflow="extendDomain"
+              label={{
+                value: baselineLabel ?? `baseline ${formatY(baseline, yFormat)}`,
+                position: "insideTopRight",
+                fill: "#6B6B6B",
+                fontSize: 10,
+              }}
+            />
+          ) : null}
           <Line
             type="monotone"
             dataKey={yKey}

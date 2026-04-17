@@ -25,6 +25,11 @@ import {
 } from "./flags";
 import { costPerHelpfulInteraction } from "./value";
 import type { AppRow } from "./types";
+import {
+  errorSignature,
+  percentile as pct,
+  dailyRunBuckets,
+} from "./forge/aggregates";
 
 export type AppType = "manual" | "chatbot" | "forge";
 
@@ -267,12 +272,16 @@ export type ForgeAgentTableRow = {
   agent_id: string;
   agent_name: string;
   runs: number;
+  failures: number;
+  failure_rate: number;
+  scheduled_pct: number | null;
   thumbs_up: number;
   thumbs_down: number;
   cost_usd: number;
-  avg_latency_ms: number | null;
+  p95_latency_ms: number | null;
   last_run_status: "queued" | "running" | "completed" | "failed" | null;
   last_run_at: string | null;
+  sparkline_14d: { date: string; runs: number }[];
 };
 
 export type FailedRunRow = {
@@ -286,10 +295,20 @@ export type FailedRunRow = {
   error_message: string | null;
 };
 
+export type FailedRunGroup = {
+  signature: string;
+  count: number;
+  total_cost_usd: number;
+  last_seen_at: string | null;
+  agents: string[];
+  runs: FailedRunRow[];
+};
+
 export type ForgeViewData = {
   display_name: string;
   slug: string;
   range_days: number;
+  est_deflected_cost: number | null;
 
   runs: number;
   runs_delta_pct: number | null;
@@ -303,6 +322,7 @@ export type ForgeViewData = {
 
   agents: ForgeAgentTableRow[];
   failed_runs: FailedRunRow[];
+  failed_run_groups: FailedRunGroup[];
 };
 
 type ForgeRunScanRow = {
@@ -358,10 +378,14 @@ export async function getForgeViewData(
     currScheduled = 0,
     currSuccess = 0;
   const perAgent = new Map<string, ForgeAgentTableRow>();
+  const perAgentDurations = new Map<string, number[]>();
+  const perAgentScheduled = new Map<string, number>();
+  const perAgent14dTimestamps = new Map<string, string[]>();
   const perAgent7d = new Map<string, { runs: number; failures: number }>();
   const failedRuns: FailedRunRow[] = [];
   const counts = { up: 0, down: 0 };
   const prior = { up: 0, down: 0 };
+  const last14FromMs = now - 14 * 24 * 60 * 60 * 1000;
 
   for (const r of runs) {
     // Scope to this app's agents. forge_runs is unscoped in the query
@@ -386,24 +410,32 @@ export async function getForgeViewData(
         agent_id: r.agent_id,
         agent_name: agentName,
         runs: 0,
+        failures: 0,
+        failure_rate: 0,
+        scheduled_pct: null,
         thumbs_up: 0,
         thumbs_down: 0,
         cost_usd: 0,
-        avg_latency_ms: null,
+        p95_latency_ms: null,
         last_run_status: null,
         last_run_at: null,
-      };
+        sparkline_14d: [],
+      } as ForgeAgentTableRow;
       row.runs += 1;
       row.cost_usd += Number(r.cost_usd ?? 0);
+      if (r.status === "failed") row.failures += 1;
       if (r.user_rating === "up") row.thumbs_up += 1;
       else if (r.user_rating === "down") row.thumbs_down += 1;
-      // latency: accumulate averaged
       if (r.duration_ms != null) {
-        const existing = row.avg_latency_ms;
-        row.avg_latency_ms =
-          existing == null
-            ? r.duration_ms
-            : Math.round((existing * (row.runs - 1) + r.duration_ms) / row.runs);
+        const arr = perAgentDurations.get(r.agent_id) ?? [];
+        arr.push(r.duration_ms);
+        perAgentDurations.set(r.agent_id, arr);
+      }
+      if (r.run_type === "scheduled") {
+        perAgentScheduled.set(
+          r.agent_id,
+          (perAgentScheduled.get(r.agent_id) ?? 0) + 1,
+        );
       }
       if (!row.last_run_at || row.last_run_at < r.created_at) {
         row.last_run_at = r.created_at;
@@ -435,7 +467,54 @@ export async function getForgeViewData(
       if (r.status === "failed") bucket.failures += 1;
       perAgent7d.set(r.agent_id, bucket);
     }
+
+    if (t >= last14FromMs) {
+      const arr = perAgent14dTimestamps.get(r.agent_id) ?? [];
+      arr.push(r.created_at);
+      perAgent14dTimestamps.set(r.agent_id, arr);
+    }
   }
+
+  // Post-process per-agent rows: p95 latency, scheduled_pct, failure_rate,
+  // sparkline.
+  for (const row of perAgent.values()) {
+    const durations = (perAgentDurations.get(row.agent_id) ?? [])
+      .slice()
+      .sort((a, b) => a - b);
+    row.p95_latency_ms = durations.length > 0 ? pct(durations, 95) : null;
+    const scheduled = perAgentScheduled.get(row.agent_id) ?? 0;
+    row.scheduled_pct = row.runs > 0 ? scheduled / row.runs : null;
+    row.failure_rate = row.runs > 0 ? row.failures / row.runs : 0;
+    row.sparkline_14d = dailyRunBuckets(
+      perAgent14dTimestamps.get(row.agent_id) ?? [],
+      14,
+    );
+  }
+
+  // Group failed runs by normalized error signature for the inspector.
+  const groups = new Map<string, FailedRunGroup>();
+  for (const fr of failedRuns) {
+    const sig = errorSignature(fr.error_message);
+    const g = groups.get(sig) ?? {
+      signature: sig,
+      count: 0,
+      total_cost_usd: 0,
+      last_seen_at: null,
+      agents: [],
+      runs: [],
+    };
+    g.count += 1;
+    g.total_cost_usd += fr.cost_usd;
+    if (!g.last_seen_at || (fr.started_at && fr.started_at > g.last_seen_at)) {
+      g.last_seen_at = fr.started_at;
+    }
+    if (!g.agents.includes(fr.agent_name)) g.agents.push(fr.agent_name);
+    g.runs.push(fr);
+    groups.set(sig, g);
+  }
+  const failedRunGroups = Array.from(groups.values()).sort(
+    (a, b) => b.count - a.count,
+  );
 
   const up_rate =
     counts.up + counts.down > 0
@@ -461,6 +540,7 @@ export async function getForgeViewData(
     display_name: app.display_name,
     slug: app.slug,
     range_days: days,
+    est_deflected_cost: app.est_deflected_cost,
     runs: currRuns,
     runs_delta_pct: pctDelta(currRuns, prevRuns),
     thumbs_up_rate: up_rate,
@@ -475,5 +555,6 @@ export async function getForgeViewData(
     failing_agents: failing,
     agents: agentRows,
     failed_runs: failedRuns.slice(0, 50),
+    failed_run_groups: failedRunGroups,
   };
 }

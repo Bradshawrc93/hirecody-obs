@@ -1,7 +1,8 @@
 import { Card, CardHeader } from "@/components/ui/card";
 import { FlagCallouts } from "@/components/flag-callouts";
+import { Sparkline } from "@/components/charts/sparkline";
 import { formatCompact, formatMs, formatUsd } from "@/lib/utils";
-import type { ForgeViewData } from "@/lib/app-view";
+import type { ForgeViewData, FailedRunGroup } from "@/lib/app-view";
 
 /**
  * Forge shape — scheduled-agent platform view. Per-agent table is
@@ -76,10 +77,13 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
                 style={{ color: "var(--fg-label)" }}
               >
                 <th className="px-4 py-3 text-left">Agent</th>
+                <th className="px-4 py-3 text-left">14d</th>
                 <th className="px-4 py-3 text-right">Runs</th>
+                <th className="px-4 py-3 text-right whitespace-nowrap">Fail %</th>
                 <th className="px-4 py-3 text-right">Thumbs</th>
                 <th className="px-4 py-3 text-right">Cost / run</th>
-                <th className="px-4 py-3 text-right">Avg latency</th>
+                <th className="px-4 py-3 text-right">Value</th>
+                <th className="px-4 py-3 text-right">p95 latency</th>
                 <th className="px-4 py-3 text-left">Last run</th>
               </tr>
             </thead>
@@ -87,7 +91,7 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
               {data.agents.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={9}
                     className="px-4 py-10 text-center text-xs"
                     style={{ color: "var(--fg-muted)" }}
                   >
@@ -98,6 +102,16 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
                 data.agents.map((a) => {
                   const costPerRun = a.runs > 0 ? a.cost_usd / a.runs : 0;
                   const totalThumbs = a.thumbs_up + a.thumbs_down;
+                  const value =
+                    data.est_deflected_cost != null
+                      ? a.thumbs_up * data.est_deflected_cost
+                      : null;
+                  const failColor =
+                    a.failure_rate >= 0.2
+                      ? "#B04A3B"
+                      : a.failure_rate >= 0.05
+                      ? "#C56A2D"
+                      : "var(--fg-muted)";
                   return (
                     <tr
                       key={a.agent_id}
@@ -113,8 +127,20 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
                           {a.agent_id.slice(0, 8)}
                         </div>
                       </td>
+                      <td className="px-4 py-3">
+                        <Sparkline points={a.sparkline_14d.map((p) => p.runs)} />
+                      </td>
                       <td className="px-4 py-3 text-right tnum">
                         {formatCompact(a.runs)}
+                      </td>
+                      <td
+                        className="px-4 py-3 text-right tnum whitespace-nowrap"
+                        style={{ color: failColor }}
+                        title={`${a.failures} failed of ${a.runs}`}
+                      >
+                        {a.runs > 0
+                          ? `${(a.failure_rate * 100).toFixed(0)}%`
+                          : "—"}
                       </td>
                       <td className="px-4 py-3 text-right tnum">
                         {totalThumbs > 0
@@ -126,9 +152,25 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
                       </td>
                       <td
                         className="px-4 py-3 text-right tnum"
+                        style={{
+                          color:
+                            value == null ? "var(--fg-dim)" : "var(--fg)",
+                        }}
+                        title={
+                          value == null
+                            ? "Set a $/thumbs-up value in /admin/apps"
+                            : `${a.thumbs_up} × ${formatUsd(
+                                data.est_deflected_cost ?? 0,
+                              )}`
+                        }
+                      >
+                        {value == null ? "—" : formatUsd(value)}
+                      </td>
+                      <td
+                        className="px-4 py-3 text-right tnum"
                         style={{ color: "var(--fg-muted)" }}
                       >
-                        {formatMs(a.avg_latency_ms)}
+                        {formatMs(a.p95_latency_ms)}
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -167,11 +209,19 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
         </div>
       </Card>
 
-      {/* Failed run inspector */}
+      {/* Failed run inspector — grouped by error signature */}
       <Card>
-        <CardHeader title="Failed run inspector" right={<span className="text-[0.7rem]" style={{color:"var(--fg-dim)"}}>{data.failed_runs.length} failed</span>} />
+        <CardHeader
+          title="Failed run inspector"
+          right={
+            <span className="text-[0.7rem]" style={{ color: "var(--fg-dim)" }}>
+              {data.failed_runs.length} failed · {data.failed_run_groups.length}{" "}
+              signature{data.failed_run_groups.length === 1 ? "" : "s"}
+            </span>
+          }
+        />
         <div className="p-2">
-          {data.failed_runs.length === 0 ? (
+          {data.failed_run_groups.length === 0 ? (
             <div
               className="flex items-center justify-center py-8 text-xs"
               style={{ color: "var(--fg-dim)" }}
@@ -179,45 +229,12 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
               No failed runs in this range.
             </div>
           ) : (
-            <ul className="divide-y" style={{ borderColor: "var(--border-soft)" }}>
-              {data.failed_runs.map((r) => (
-                <li key={r.id} className="p-3">
-                  <details>
-                    <summary className="cursor-pointer list-none">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm">
-                            <span className="font-medium">{r.agent_name}</span>
-                            <span
-                              className="ml-2 text-[0.7rem]"
-                              style={{ color: "var(--fg-dim)" }}
-                            >
-                              {r.started_at
-                                ? new Date(r.started_at).toLocaleString()
-                                : ""}
-                            </span>
-                          </div>
-                          <div
-                            className="mt-0.5 truncate text-xs"
-                            style={{ color: "var(--fg-muted)" }}
-                          >
-                            {r.error_snippet || "(no error captured)"}
-                          </div>
-                        </div>
-                        <span
-                          className="tnum text-[0.7rem]"
-                          style={{ color: "var(--fg-muted)" }}
-                        >
-                          {formatUsd(r.cost_usd)}
-                        </span>
-                      </div>
-                    </summary>
-                    <div className="mt-3 space-y-3">
-                      <Pre title="Input" body={r.input_text} />
-                      <Pre title="Error" body={r.error_message} />
-                    </div>
-                  </details>
-                </li>
+            <ul
+              className="divide-y"
+              style={{ borderColor: "var(--border-soft)" }}
+            >
+              {data.failed_run_groups.map((g) => (
+                <FailedGroup key={g.signature} group={g} />
               ))}
             </ul>
           )}
@@ -263,6 +280,83 @@ function pctDeltaLabel(value: number | null): string {
   if (value == null) return "—";
   const arrow = value >= 0 ? "▲" : "▼";
   return `${arrow} ${Math.abs(value).toFixed(1)}% vs prior`;
+}
+
+function FailedGroup({ group }: { group: FailedRunGroup }) {
+  return (
+    <li className="p-3">
+      <details>
+        <summary className="cursor-pointer list-none">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 text-sm">
+                <span
+                  className="inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[0.65rem] font-semibold"
+                  style={{ background: "#F3DED6", color: "#7A2A1E" }}
+                >
+                  ×{group.count}
+                </span>
+                <span className="truncate font-mono text-xs">
+                  {group.signature}
+                </span>
+              </div>
+              <div
+                className="mt-1 text-[0.7rem]"
+                style={{ color: "var(--fg-dim)" }}
+              >
+                {group.agents.slice(0, 3).join(", ")}
+                {group.agents.length > 3
+                  ? ` +${group.agents.length - 3} more`
+                  : ""}
+                {group.last_seen_at
+                  ? ` · last ${new Date(group.last_seen_at).toLocaleString()}`
+                  : ""}
+              </div>
+            </div>
+            <span
+              className="tnum text-[0.7rem]"
+              style={{ color: "var(--fg-muted)" }}
+            >
+              {formatUsd(group.total_cost_usd)}
+            </span>
+          </div>
+        </summary>
+        <ul
+          className="mt-3 divide-y"
+          style={{ borderColor: "var(--border-soft)" }}
+        >
+          {group.runs.slice(0, 20).map((r) => (
+            <li key={r.id} className="py-2">
+              <details>
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <span className="font-medium">{r.agent_name}</span>
+                    <span style={{ color: "var(--fg-dim)" }}>
+                      {r.started_at
+                        ? new Date(r.started_at).toLocaleString()
+                        : ""}
+                    </span>
+                  </div>
+                </summary>
+                <div className="mt-2 space-y-2">
+                  <Pre title="Input" body={r.input_text} />
+                  <Pre title="Error" body={r.error_message} />
+                </div>
+              </details>
+            </li>
+          ))}
+          {group.runs.length > 20 ? (
+            <li
+              className="py-2 text-[0.7rem]"
+              style={{ color: "var(--fg-dim)" }}
+            >
+              +{group.runs.length - 20} more not shown
+            </li>
+          ) : null}
+        </ul>
+      </details>
+    </li>
+  );
 }
 
 function Pre({

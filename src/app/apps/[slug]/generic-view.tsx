@@ -53,7 +53,13 @@ export function GenericView({ slug, data: stats }: { slug: string; data: AppDeta
           <CardHeader title="Model breakdown" />
           <div className="p-4">
             {stats.model_breakdown.length > 0 ? (
-              <ModelDonut data={stats.model_breakdown} />
+              <ModelDonut
+                data={stats.model_breakdown.map((m) => ({
+                  model: m.model,
+                  value: m.calls,
+                  provider: m.provider,
+                }))}
+              />
             ) : (
               <EmptyChart />
             )}

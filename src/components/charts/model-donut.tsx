@@ -6,7 +6,7 @@ import { providerColor } from "@/lib/utils";
 export function ModelDonut({
   data,
 }: {
-  data: { model: string; calls: number; provider: string }[];
+  data: { model: string; value: number; provider: string }[];
 }) {
   return (
     <div style={{ width: "100%", height: 220 }}>
@@ -23,7 +23,7 @@ export function ModelDonut({
           />
           <Pie
             data={data}
-            dataKey="calls"
+            dataKey="value"
             nameKey="model"
             innerRadius={55}
             outerRadius={90}

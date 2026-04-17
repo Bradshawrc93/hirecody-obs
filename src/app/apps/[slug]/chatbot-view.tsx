@@ -102,8 +102,8 @@ export function ChatbotView({ data }: { data: ChatbotViewData }) {
               <ModelDonut
                 data={data.model_spend.map((m) => ({
                   model: m.model,
-                  calls: Math.max(1, Math.round(m.cost * 10000)),
-                  provider: "",
+                  value: m.cost,
+                  provider: m.model,
                 }))}
               />
             )}
@@ -276,16 +276,14 @@ function LatencyWithBaseline({
   data: { date: string; p95: number }[];
   baseline: number;
 }) {
-  // Visualize the baseline as a horizontal guide inside the SimpleLine
-  // tooltip space. Recharts can take a ReferenceLine but SimpleLine
-  // doesn't expose that; instead, add the baseline as a second series.
-  const merged = data.map((d) => ({ ...d, baseline }));
   return (
     <SimpleLine
-      data={merged}
+      data={data}
       xKey="date"
       yKey="p95"
       color="#C56A2D"
+      baseline={baseline}
+      baselineLabel={`4w baseline ${Math.round(baseline)}ms`}
     />
   );
 }

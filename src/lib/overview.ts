@@ -50,6 +50,10 @@ export type OverviewData = {
   apps: ScorecardAppRow[];
   flags: Array<PortfolioFlag & { app_slug: string }>;
   value: ReturnType<typeof valueDelivered>;
+  usage_by_app: {
+    keys: string[];
+    points: Array<Record<string, number | string> & { date: string }>;
+  };
 };
 
 type AppWithConfig = AppRow & {
@@ -142,6 +146,30 @@ export async function getOverviewData(rangeDays = 90): Promise<OverviewData> {
 
   const apps = (appsRes.data ?? []) as AppWithConfig[];
   const events = (eventsRes.data ?? []) as EventRow[];
+
+  // Forge runs within the range — counted as usage for forge-typed apps.
+  const forgeAppIds = apps.filter((a) => a.type === "forge").map((a) => a.id);
+  let forgeRunRows: { app_id: string; created_at: string }[] = [];
+  if (forgeAppIds.length > 0) {
+    const { data: forgeData } = await db
+      .from("forge_runs")
+      .select("created_at, forge_agents!inner(app_id)")
+      .in("forge_agents.app_id", forgeAppIds)
+      .gte("created_at", nDaysAgoIso(rangeDays))
+      .limit(50000);
+    const rows = (forgeData ?? []) as unknown as {
+      created_at: string;
+      forge_agents:
+        | { app_id: string }
+        | { app_id: string }[];
+    }[];
+    forgeRunRows = rows.map((r) => ({
+      created_at: r.created_at,
+      app_id: Array.isArray(r.forge_agents)
+        ? r.forge_agents[0]?.app_id ?? ""
+        : r.forge_agents?.app_id ?? "",
+    }));
+  }
 
   const rangeFromMs = Date.parse(nDaysAgoIso(rangeDays));
   const last7FromMs = Date.parse(nDaysAgoIso(7));
@@ -306,11 +334,44 @@ export async function getOverviewData(rangeDays = 90): Promise<OverviewData> {
     })),
   );
 
+  // Build per-day × per-app usage counts across the range.
+  const usageByAppId = new Map<string, Map<string, number>>();
+  const bumpUsage = (appId: string, iso: string) => {
+    const t = Date.parse(iso);
+    if (t < rangeFromMs) return;
+    const day = dayKey(iso);
+    const perDay = usageByAppId.get(appId) ?? new Map<string, number>();
+    perDay.set(day, (perDay.get(day) ?? 0) + 1);
+    usageByAppId.set(appId, perDay);
+  };
+  for (const e of events) bumpUsage(e.app_id, e.timestamp);
+  for (const r of forgeRunRows) if (r.app_id) bumpUsage(r.app_id, r.created_at);
+
+  const usageKeys = apps
+    .filter((a) => usageByAppId.has(a.id))
+    .map((a) => a.display_name);
+  const usagePoints: Array<Record<string, number | string> & { date: string }> =
+    [];
+  for (let i = rangeDays - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const point: Record<string, number | string> & { date: string } = {
+      date: key,
+    };
+    for (const a of apps) {
+      if (!usageByAppId.has(a.id)) continue;
+      point[a.display_name] = usageByAppId.get(a.id)!.get(key) ?? 0;
+    }
+    usagePoints.push(point);
+  }
+
   return {
     range_days: rangeDays,
     apps: scorecardRows,
     flags: allFlags,
     value,
+    usage_by_app: { keys: usageKeys, points: usagePoints },
   };
 }
 
