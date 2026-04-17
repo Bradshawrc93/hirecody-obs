@@ -316,6 +316,7 @@ type ForgeRunScanRow = {
   cost_usd: number | null;
   input_text: string | null;
   error_message: string | null;
+  user_rating: "up" | "down" | null;
 };
 
 export async function getForgeViewData(
@@ -325,20 +326,18 @@ export async function getForgeViewData(
   const db = createServiceClient();
   const scanFrom = nDaysAgoIso(Math.max(days * 2, 14));
 
-  const [{ data: runsData }, { data: agentsData }, feedbackCounts] =
-    await Promise.all([
-      db
-        .from("forge_runs")
-        .select("id, agent_id, run_type, status, created_at, started_at, duration_ms, cost_usd, input_text, error_message")
-        .gte("created_at", scanFrom)
-        .order("created_at", { ascending: false })
-        .limit(10000),
-      db
-        .from("forge_agents")
-        .select("app_id, description")
-        .eq("app_id", app.id),
-      getFeedbackCountsByApp(days * 2),
-    ]);
+  const [{ data: runsData }, { data: agentsData }] = await Promise.all([
+    db
+      .from("forge_runs")
+      .select("id, agent_id, run_type, status, created_at, started_at, duration_ms, cost_usd, input_text, error_message, user_rating")
+      .gte("created_at", scanFrom)
+      .order("created_at", { ascending: false })
+      .limit(10000),
+    db
+      .from("forge_agents")
+      .select("app_id, description")
+      .eq("app_id", app.id),
+  ]);
 
   const runs = (runsData ?? []) as ForgeRunScanRow[];
   const agentNames = new Map<string, string>();
@@ -361,8 +360,15 @@ export async function getForgeViewData(
   const perAgent = new Map<string, ForgeAgentTableRow>();
   const perAgent7d = new Map<string, { runs: number; failures: number }>();
   const failedRuns: FailedRunRow[] = [];
+  const counts = { up: 0, down: 0 };
+  const prior = { up: 0, down: 0 };
 
   for (const r of runs) {
+    // Scope to this app's agents. forge_runs is unscoped in the query
+    // (Supabase can't easily filter by join), so we reject agents that
+    // aren't in our agent-name map.
+    if (!agentNames.has(r.agent_id)) continue;
+
     const t = Date.parse(r.created_at);
     const inRange = t >= rangeFromMs;
     const inPrior = t < rangeFromMs && t >= priorFromMs;
@@ -373,6 +379,8 @@ export async function getForgeViewData(
       currCost += Number(r.cost_usd ?? 0);
       if (r.run_type === "scheduled") currScheduled += 1;
       if (r.status === "completed") currSuccess += 1;
+      if (r.user_rating === "up") counts.up += 1;
+      else if (r.user_rating === "down") counts.down += 1;
 
       const row = perAgent.get(r.agent_id) ?? {
         agent_id: r.agent_id,
@@ -387,6 +395,8 @@ export async function getForgeViewData(
       };
       row.runs += 1;
       row.cost_usd += Number(r.cost_usd ?? 0);
+      if (r.user_rating === "up") row.thumbs_up += 1;
+      else if (r.user_rating === "down") row.thumbs_down += 1;
       // latency: accumulate averaged
       if (r.duration_ms != null) {
         const existing = row.avg_latency_ms;
@@ -415,6 +425,8 @@ export async function getForgeViewData(
       }
     } else if (inPrior) {
       prevRuns += 1;
+      if (r.user_rating === "up") prior.up += 1;
+      else if (r.user_rating === "down") prior.down += 1;
     }
 
     if (t >= last7FromMs) {
@@ -423,43 +435,6 @@ export async function getForgeViewData(
       if (r.status === "failed") bucket.failures += 1;
       perAgent7d.set(r.agent_id, bucket);
     }
-  }
-
-  // Feedback at the run-level is keyed by forge_run entity_id. Pull
-  // per-run votes for just this app's runs.
-  const { data: fbRows } = await db
-    .from("feedback")
-    .select("entity_id, vote, created_at")
-    .eq("app_slug", app.slug)
-    .eq("entity_type", "forge_run")
-    .gte("created_at", nDaysAgoIso(days));
-  for (const r of (fbRows ?? []) as {
-    entity_id: string;
-    vote: "up" | "down";
-    created_at: string;
-  }[]) {
-    const inRange = Date.parse(r.created_at) >= rangeFromMs;
-    if (!inRange) continue;
-    // Find which agent this run belonged to (the entity_id is the run id).
-    const run = runs.find((x) => x.id === r.entity_id);
-    if (!run) continue;
-    const row = perAgent.get(run.agent_id);
-    if (!row) continue;
-    if (r.vote === "up") row.thumbs_up += 1;
-    else row.thumbs_down += 1;
-  }
-
-  // App-level thumbs-up rate deltas (vs prior period)
-  const counts = feedbackCounts[app.slug] ?? { up: 0, down: 0 };
-  const { data: priorFb } = await db
-    .from("feedback")
-    .select("vote")
-    .eq("app_slug", app.slug)
-    .gte("created_at", nDaysAgoIso(days * 2))
-    .lt("created_at", nDaysAgoIso(days));
-  const prior = { up: 0, down: 0 };
-  for (const r of (priorFb ?? []) as { vote: "up" | "down" }[]) {
-    prior[r.vote] += 1;
   }
 
   const up_rate =

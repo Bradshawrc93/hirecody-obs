@@ -33,43 +33,123 @@ function emptyCounts(): AppFeedbackCounts {
 /**
  * Per-app feedback counts over the last `days`. Used for the scorecard
  * thumbs-up rate and the value-delivered helpful-interactions count.
+ *
+ * Two sources, one shape:
+ *   - Chatbot-style apps write votes into the `feedback` table via
+ *     POST /api/feedback.
+ *   - Forge keeps votes on `forge_runs.user_rating` directly (one vote
+ *     per run, first-wins enforced on the Forge side). We read those
+ *     and join through forge_agents → apps.id → apps.slug.
  */
 export async function getFeedbackCountsByApp(
   days = 90,
 ): Promise<Record<string, AppFeedbackCounts>> {
   const db = createServiceClient();
-  const { data } = await db
-    .from("feedback")
-    .select("app_slug, vote")
-    .gte("created_at", nDaysAgoIso(days));
   const out: Record<string, AppFeedbackCounts> = {};
-  for (const r of (data ?? []) as { app_slug: string; vote: "up" | "down" }[]) {
+
+  const [fbRes, forgeRes, appsRes] = await Promise.all([
+    db
+      .from("feedback")
+      .select("app_slug, vote")
+      .gte("created_at", nDaysAgoIso(days)),
+    db
+      .from("forge_runs")
+      .select("agent_id, user_rating")
+      .gte("created_at", nDaysAgoIso(days))
+      .not("user_rating", "is", null),
+    db.from("apps").select("id, slug").eq("type", "forge"),
+  ]);
+
+  for (const r of (fbRes.data ?? []) as { app_slug: string; vote: "up" | "down" }[]) {
     if (!out[r.app_slug]) out[r.app_slug] = emptyCounts();
     out[r.app_slug][r.vote] += 1;
   }
+
+  const slugByAppId = new Map<string, string>();
+  for (const a of (appsRes.data ?? []) as { id: string; slug: string }[]) {
+    slugByAppId.set(a.id, a.slug);
+  }
+  for (const r of (forgeRes.data ?? []) as {
+    agent_id: string;
+    user_rating: "up" | "down";
+  }[]) {
+    // forge_runs.agent_id is the same uuid as forge_agents.app_id / apps.id.
+    const slug = slugByAppId.get(r.agent_id);
+    if (!slug) continue;
+    if (!out[slug]) out[slug] = emptyCounts();
+    out[slug][r.user_rating] += 1;
+  }
+
   return out;
 }
 
 /**
  * Per-(app, model) feedback counts — feeds the Model Efficiency flag.
+ *
+ * For Chatbot apps the `model` field is written alongside the vote
+ * into `feedback`. For Forge apps, the model is on the agent, not the
+ * run, so we join forge_runs → forge_agents and group by agent.model.
+ * Both paths return the same shape so `src/lib/flags.ts` doesn't care.
  */
 export async function getFeedbackByAppAndModel(
   appSlug: string,
   days = 90,
 ): Promise<{ model: string; up: number; down: number }[]> {
   const db = createServiceClient();
-  const { data } = await db
-    .from("feedback")
-    .select("model, vote")
-    .eq("app_slug", appSlug)
-    .not("model", "is", null)
-    .gte("created_at", nDaysAgoIso(days));
+
+  // Discriminate on app.type so we hit the right source table. Callers
+  // that don't know the type still work — the Chatbot path will just
+  // return an empty list for Forge slugs and vice versa.
+  const { data: appRow } = await db
+    .from("apps")
+    .select("id, type")
+    .eq("slug", appSlug)
+    .maybeSingle();
+  const type = (appRow as { id: string; type: string } | null)?.type;
+  const appId = (appRow as { id: string; type: string } | null)?.id;
+
   const bucket = new Map<string, { up: number; down: number }>();
-  for (const r of (data ?? []) as { model: string; vote: "up" | "down" }[]) {
-    const b = bucket.get(r.model) ?? { up: 0, down: 0 };
-    b[r.vote] += 1;
-    bucket.set(r.model, b);
+
+  if (type === "forge" && appId) {
+    const [{ data: runs }, { data: agents }] = await Promise.all([
+      db
+        .from("forge_runs")
+        .select("agent_id, user_rating")
+        .gte("created_at", nDaysAgoIso(days))
+        .not("user_rating", "is", null),
+      db
+        .from("forge_agents")
+        .select("app_id, model")
+        .eq("app_id", appId),
+    ]);
+    const modelByAgent = new Map<string, string>();
+    for (const a of (agents ?? []) as { app_id: string; model: string | null }[]) {
+      if (a.model) modelByAgent.set(a.app_id, a.model);
+    }
+    for (const r of (runs ?? []) as {
+      agent_id: string;
+      user_rating: "up" | "down";
+    }[]) {
+      const model = modelByAgent.get(r.agent_id);
+      if (!model) continue;
+      const b = bucket.get(model) ?? { up: 0, down: 0 };
+      b[r.user_rating] += 1;
+      bucket.set(model, b);
+    }
+  } else {
+    const { data } = await db
+      .from("feedback")
+      .select("model, vote")
+      .eq("app_slug", appSlug)
+      .not("model", "is", null)
+      .gte("created_at", nDaysAgoIso(days));
+    for (const r of (data ?? []) as { model: string; vote: "up" | "down" }[]) {
+      const b = bucket.get(r.model) ?? { up: 0, down: 0 };
+      b[r.vote] += 1;
+      bucket.set(r.model, b);
+    }
   }
+
   return Array.from(bucket.entries()).map(([model, v]) => ({ model, ...v }));
 }
 
