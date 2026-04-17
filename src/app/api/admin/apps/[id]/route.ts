@@ -9,6 +9,7 @@ export const runtime = "nodejs";
 const PatchBody = z.object({
   display_name: z.string().min(1).optional(),
   monthly_budget_usd: z.number().nonnegative().nullable().optional(),
+  est_deflected_cost: z.number().nonnegative().nullable().optional(),
   rotate_key: z.literal(true).optional(),
 });
 
@@ -31,6 +32,8 @@ export async function PATCH(
   if (parsed.data.display_name != null) update.display_name = parsed.data.display_name;
   if (parsed.data.monthly_budget_usd !== undefined)
     update.monthly_budget_usd = parsed.data.monthly_budget_usd;
+  if (parsed.data.est_deflected_cost !== undefined)
+    update.est_deflected_cost = parsed.data.est_deflected_cost;
 
   let newKey: string | null = null;
   if (parsed.data.rotate_key) {

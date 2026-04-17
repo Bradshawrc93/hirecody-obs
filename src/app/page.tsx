@@ -104,8 +104,9 @@ export default async function OverviewPage({
                 <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-left">14d trend</th>
                 <th className="px-4 py-3 text-right">Thumbs-up</th>
-                <th className="px-4 py-3 text-right">Cost / helpful</th>
                 <th className="px-4 py-3 text-right">Spend</th>
+                <th className="px-4 py-3 text-right">Value</th>
+                <th className="px-4 py-3 text-right">Net</th>
                 <th className="px-4 py-3 text-right">&nbsp;</th>
               </tr>
             </thead>
@@ -116,7 +117,7 @@ export default async function OverviewPage({
               {data.apps.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-10 text-center text-sm"
                     style={{ color: "var(--fg-muted)" }}
                   >
@@ -144,10 +145,12 @@ function ScorecardRow({
     thumbs == null
       ? "— awaiting feedback"
       : `${(thumbs * 100).toFixed(0)}%`;
-  const cphiLabel =
-    row.cost_per_helpful == null
-      ? "— awaiting feedback"
-      : formatUsd(row.cost_per_helpful);
+
+  const value =
+    row.est_deflected_cost != null
+      ? row.helpful_interactions * row.est_deflected_cost
+      : null;
+  const net = value != null ? value - row.cost_usd : null;
 
   const sparkPoints = row.sparkline_14d.map((p) => p.cost);
   const tone: "ok" | "warn" | "idle" = row.status;
@@ -212,12 +215,37 @@ function ScorecardRow({
           </div>
         )}
       </td>
-      <td className="px-4 py-3 text-right tnum">{cphiLabel}</td>
       <td
         className="px-4 py-3 text-right tnum"
         style={{ color: "var(--fg-muted)" }}
       >
         {formatUsd(row.cost_usd)}
+      </td>
+      <td className="px-4 py-3 text-right tnum">
+        {value == null ? (
+          <span
+            className="text-xs"
+            style={{ color: "var(--fg-dim)" }}
+            title="Set a $/thumbs-up value in /admin/apps to enable this column"
+          >
+            —
+          </span>
+        ) : (
+          formatUsd(value)
+        )}
+      </td>
+      <td
+        className="px-4 py-3 text-right tnum"
+        style={{
+          color:
+            net == null
+              ? "var(--fg-dim)"
+              : net >= 0
+              ? "#4F7A58"
+              : "#B04A3B",
+        }}
+      >
+        {net == null ? "—" : `${net >= 0 ? "+" : "−"}${formatUsd(Math.abs(net))}`}
       </td>
       <td className="px-4 py-3 text-right">
         <Link

@@ -8,6 +8,7 @@ export interface AppRow {
   display_name: string;
   api_key_hash: string;
   monthly_budget_usd: number | null;
+  est_deflected_cost: number | null;
   created_at: string;
 }
 

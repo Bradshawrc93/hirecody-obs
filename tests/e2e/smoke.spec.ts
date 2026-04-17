@@ -11,7 +11,9 @@ test("overview renders the redesigned scorecard", async ({ page }) => {
   // Scorecard table header anchors regression tests to the redesign.
   await expect(page.getByText(/Portfolio scorecard/i)).toBeVisible();
   await expect(page.getByText(/14d trend/i)).toBeVisible();
-  await expect(page.getByText(/Cost \/ helpful/i)).toBeVisible();
+  await expect(page.getByText(/^Spend$/i)).toBeVisible();
+  await expect(page.getByText(/^Value$/i)).toBeVisible();
+  await expect(page.getByText(/^Net$/i)).toBeVisible();
 });
 
 test("queries route is gone", async ({ page }) => {

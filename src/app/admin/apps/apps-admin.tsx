@@ -70,6 +70,17 @@ export function AppsAdmin({ apps }: { apps: AppRow[] }) {
     router.refresh();
   }
 
+  async function updateDeflection(id: string, value: string) {
+    await fetch(`/api/admin/apps/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        est_deflected_cost: value === "" ? null : Number(value),
+      }),
+    });
+    router.refresh();
+  }
+
   async function deleteApp(id: string) {
     if (!confirm("Delete this app AND every event it logged? This cannot be undone.")) return;
     const res = await fetch(`/api/admin/apps/${id}`, { method: "DELETE" });
@@ -109,6 +120,7 @@ export function AppsAdmin({ apps }: { apps: AppRow[] }) {
                 <th className="px-4 py-3 text-left">Slug</th>
                 <th className="px-4 py-3 text-left">Display name</th>
                 <th className="px-4 py-3 text-left">Monthly budget</th>
+                <th className="px-4 py-3 text-left">Value / thumbs-up</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -136,6 +148,28 @@ export function AppsAdmin({ apps }: { apps: AppRow[] }) {
                       {a.monthly_budget_usd != null ? (
                         <span className="ml-2 text-[0.7rem]" style={{ color: "var(--fg-dim)" }}>
                           ({formatUsd(a.monthly_budget_usd)}/mo)
+                        </span>
+                      ) : null}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <span className="tnum" style={{ color: "var(--fg-muted)" }}>
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        defaultValue={a.est_deflected_cost ?? ""}
+                        onBlur={(e) => updateDeflection(a.id, e.target.value)}
+                        className="w-24 rounded-md border bg-[var(--bg)] px-2 py-1 text-xs tnum"
+                        style={{ borderColor: "var(--border)" }}
+                        title="Estimated dollar value per thumbs-up. Feeds the Value Delivered hero and per-app Net math."
+                      />
+                      {a.est_deflected_cost != null ? (
+                        <span className="ml-2 text-[0.7rem]" style={{ color: "var(--fg-dim)" }}>
+                          / thumbs-up
                         </span>
                       ) : null}
                     </div>
