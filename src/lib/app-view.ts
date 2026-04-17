@@ -323,6 +323,14 @@ export type ForgeViewData = {
   agents: ForgeAgentTableRow[];
   failed_runs: FailedRunRow[];
   failed_run_groups: FailedRunGroup[];
+
+  daily_series: {
+    date: string;
+    runs: number;
+    cost: number;
+    failures: number;
+    p95_latency_ms: number;
+  }[];
 };
 
 type ForgeRunScanRow = {
@@ -382,6 +390,10 @@ export async function getForgeViewData(
   const perAgentScheduled = new Map<string, number>();
   const perAgent14dTimestamps = new Map<string, string[]>();
   const perAgent7d = new Map<string, { runs: number; failures: number }>();
+  const dailyBuckets = new Map<
+    string,
+    { runs: number; cost: number; failures: number; durations: number[] }
+  >();
   const failedRuns: FailedRunRow[] = [];
   const counts = { up: 0, down: 0 };
   const prior = { up: 0, down: 0 };
@@ -442,6 +454,19 @@ export async function getForgeViewData(
         row.last_run_status = r.status;
       }
       perAgent.set(r.agent_id, row);
+
+      const dayKey = r.created_at.slice(0, 10);
+      const bucket = dailyBuckets.get(dayKey) ?? {
+        runs: 0,
+        cost: 0,
+        failures: 0,
+        durations: [],
+      };
+      bucket.runs += 1;
+      bucket.cost += Number(r.cost_usd ?? 0);
+      if (r.status === "failed") bucket.failures += 1;
+      if (r.duration_ms != null) bucket.durations.push(r.duration_ms);
+      dailyBuckets.set(dayKey, bucket);
 
       if (r.status === "failed") {
         failedRuns.push({
@@ -536,6 +561,22 @@ export async function getForgeViewData(
     })),
   );
 
+  const dailySeries: ForgeViewData["daily_series"] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const b = dailyBuckets.get(key);
+    const durs = (b?.durations ?? []).slice().sort((a, z) => a - z);
+    dailySeries.push({
+      date: key,
+      runs: b?.runs ?? 0,
+      cost: b?.cost ?? 0,
+      failures: b?.failures ?? 0,
+      p95_latency_ms: durs.length > 0 ? pct(durs, 95) : 0,
+    });
+  }
+
   return {
     display_name: app.display_name,
     slug: app.slug,
@@ -556,5 +597,6 @@ export async function getForgeViewData(
     agents: agentRows,
     failed_runs: failedRuns.slice(0, 50),
     failed_run_groups: failedRunGroups,
+    daily_series: dailySeries,
   };
 }

@@ -1,6 +1,7 @@
 import { Card, CardHeader } from "@/components/ui/card";
 import { FlagCallouts } from "@/components/flag-callouts";
 import { Sparkline } from "@/components/charts/sparkline";
+import { SimpleLine } from "@/components/charts/simple-line";
 import { formatCompact, formatMs, formatUsd } from "@/lib/utils";
 import type { ForgeViewData, FailedRunGroup } from "@/lib/app-view";
 
@@ -208,6 +209,34 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
           </table>
         </div>
       </Card>
+
+      {/* Trend charts */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader title="Usage" right={<span className="text-[0.7rem]" style={{color:"var(--fg-dim)"}}>runs / day</span>} />
+          <div className="p-3">
+            <SimpleLine data={data.daily_series} xKey="date" yKey="runs" color="#4F7A58" />
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Cost" right={<span className="text-[0.7rem]" style={{color:"var(--fg-dim)"}}>$ / day</span>} />
+          <div className="p-3">
+            <SimpleLine data={data.daily_series} xKey="date" yKey="cost" yFormat="usd" color="#C56A2D" />
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Failures" right={<span className="text-[0.7rem]" style={{color:"var(--fg-dim)"}}>failed runs / day</span>} />
+          <div className="p-3">
+            <SimpleLine data={data.daily_series} xKey="date" yKey="failures" color="#B04A3B" />
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Latency" right={<span className="text-[0.7rem]" style={{color:"var(--fg-dim)"}}>p95 ms / day</span>} />
+          <div className="p-3">
+            <SimpleLine data={data.daily_series} xKey="date" yKey="p95_latency_ms" color="#8A6DBF" />
+          </div>
+        </Card>
+      </div>
 
       {/* Failed run inspector — grouped by error signature */}
       <Card>
