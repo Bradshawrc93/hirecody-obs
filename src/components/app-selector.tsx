@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 /**
  * Minimal app selector — native <select> so the page stays server-rendered
- * and the URL stays the source of truth. Used on /queries, /compare, /live.
+ * and the URL stays the source of truth. Used on /compare and /live.
  */
 export function AppSelector({
   apps,

@@ -17,11 +17,39 @@ const OPTIONS: { label: string; days: number }[] = [
   { label: "90d", days: 90 },
 ];
 
-export function DateRangePicker({ defaultDays = 30 }: { defaultDays?: number }) {
+/**
+ * Extended preset set for the Overview page. Adds Quarter + YTD to the
+ * base 7/30/90. `quarter` is treated as 90d for aggregate math — a
+ * visual approximation, not a calendar-aligned quarter — since the
+ * scorecard chart resolution is daily.
+ */
+const OVERVIEW_OPTIONS: { label: string; days: number }[] = [
+  { label: "7d",     days: 7 },
+  { label: "30d",    days: 30 },
+  { label: "90d",    days: 90 },
+  { label: "Quarter",days: 90 },
+  { label: "YTD",    days: Math.max(1, ytdDays()) },
+];
+
+function ytdDays(): number {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const ms = now.getTime() - start.getTime();
+  return Math.max(1, Math.ceil(ms / (24 * 60 * 60 * 1000)));
+}
+
+export function DateRangePicker({
+  defaultDays = 30,
+  variant = "base",
+}: {
+  defaultDays?: number;
+  variant?: "base" | "overview";
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const current = Number(params.get("days") ?? defaultDays);
+  const options = variant === "overview" ? OVERVIEW_OPTIONS : OPTIONS;
 
   const setDays = (days: number) => {
     const sp = new URLSearchParams(params);
@@ -34,7 +62,7 @@ export function DateRangePicker({ defaultDays = 30 }: { defaultDays?: number }) 
       className="inline-flex overflow-hidden rounded-md border text-xs"
       style={{ borderColor: "var(--border)" }}
     >
-      {OPTIONS.map((opt) => (
+      {options.map((opt) => (
         <button
           key={opt.days}
           onClick={() => setDays(opt.days)}

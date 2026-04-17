@@ -36,7 +36,6 @@ type NavItem = {
 const publicNav: NavItem[] = [
   { href: "/",        label: "Overview",        icon: LayoutDashboard },
   { href: "/apps",    label: "Apps",            icon: Boxes },
-  { href: "/queries", label: "Top Queries",     icon: ListOrdered },
   { href: "/live",    label: "Live Tail",       icon: Activity },
   { href: "/compare", label: "Model Comparison",icon: GitCompareArrows },
 ];

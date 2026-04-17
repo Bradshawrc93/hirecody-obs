@@ -1,120 +1,233 @@
-import {
-  getOverviewStats,
-  getDailyCostByApp,
-  getCostByModel,
-  getCostByApp,
-  getLatencyOverTime,
-} from "@/lib/aggregates";
-import { formatCompact, formatUsd } from "@/lib/utils";
-import { Card, CardHeader } from "@/components/ui/card";
-import { MetricCard } from "@/components/ui/metric-card";
-import { DailyCostArea } from "@/components/charts/daily-cost-area";
-import { CostByModelBar } from "@/components/charts/cost-by-model-bar";
-import { CostByAppDonut } from "@/components/charts/cost-by-app-donut";
-import { LatencyLine } from "@/components/charts/latency-line";
+import Link from "next/link";
+import { getOverviewData } from "@/lib/overview";
+import { Card } from "@/components/ui/card";
+import { StatusDot } from "@/components/ui/status-dot";
+import { DateRangePicker } from "@/components/date-range-picker";
+import { ValueDeliveredHero } from "@/components/value-delivered-hero";
+import { AppPickerPills } from "@/components/app-picker-pills";
+import { FlagCallouts } from "@/components/flag-callouts";
+import { Sparkline } from "@/components/charts/sparkline";
+import { formatUsd, formatCompact } from "@/lib/utils";
 
-// Cache the expensive aggregates for 30s per spec. Banner + admin state
-// live in the layout (force-dynamic), so those still refresh per request.
+/**
+ * Fleet Overview — "AI operator's cockpit".
+ *
+ * Reads a single assembled payload from src/lib/overview.ts so this
+ * page stays a thin presentation layer: header → hero → app pills →
+ * active flags strip (conditional) → portfolio scorecard.
+ */
+
 export const revalidate = 30;
 
-function deltaText(value: number | null): string {
-  if (value == null) return "vs. last month: —";
-  const arrow = value >= 0 ? "▲" : "▼";
-  return `${arrow} ${Math.abs(value).toFixed(1)}% vs. last month`;
+const RANGE_LABEL: Record<number, string> = {
+  7: "last 7 days",
+  30: "last 30 days",
+  90: "last 90 days",
+};
+
+function rangeLabel(days: number): string {
+  return RANGE_LABEL[days] ?? `last ${days} days`;
 }
 
-export default async function OverviewPage() {
-  const [stats, daily, byModel, byApp, latency] = await Promise.all([
-    getOverviewStats(),
-    getDailyCostByApp(30),
-    getCostByModel(30),
-    getCostByApp(30),
-    getLatencyOverTime(30),
-  ]);
+export default async function OverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ days?: string }>;
+}) {
+  const { days: daysParam } = await searchParams;
+  const days = Math.max(1, Math.min(366, Number(daysParam ?? 90)));
+
+  const data = await getOverviewData(days);
 
   return (
     <div className="space-y-8">
-      <header>
-        <div className="section-eyebrow mb-3">Dashboard</div>
-        <h1 className="font-serif text-[2rem] md:text-[2.4rem] font-semibold tracking-tight leading-tight">
-          Overview
-        </h1>
-        <p className="mt-2 text-sm" style={{ color: "var(--fg-muted)" }}>
-          What every model costs, every app is using, every day — in one place.
-        </p>
+      {/* Header + date range */}
+      <header className="flex items-end justify-between">
+        <div>
+          <div className="section-eyebrow mb-3">Dashboard</div>
+          <h1 className="font-serif text-[2rem] md:text-[2.4rem] font-semibold tracking-tight leading-tight">
+            Fleet Overview
+          </h1>
+          <p className="mt-2 text-sm" style={{ color: "var(--fg-muted)" }}>
+            What value our AI apps delivered — and where money or quality
+            is leaking.
+          </p>
+        </div>
+        <DateRangePicker defaultDays={90} variant="overview" />
       </header>
 
-      {/* Hero stat strip */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          label="Total Cost MTD"
-          value={formatUsd(stats.totalCostMtd)}
-          delta={deltaText(stats.deltas.cost)}
-        />
-        <MetricCard
-          label="Total Tokens MTD"
-          value={formatCompact(stats.totalTokensMtd)}
-          delta={deltaText(stats.deltas.tokens)}
-        />
-        <MetricCard
-          label="Total Calls MTD"
-          value={formatCompact(stats.totalCallsMtd)}
-          delta={deltaText(stats.deltas.calls)}
-        />
-        <MetricCard
-          label="Active Apps"
-          value={String(stats.activeApps)}
-          delta="this month"
-        />
-      </div>
+      {/* Hero band */}
+      <ValueDeliveredHero
+        total_usd={data.value.total_usd}
+        total_helpful_interactions={data.value.total_helpful_interactions}
+        range_label={rangeLabel(days)}
+        breakdown={data.value.breakdown}
+      />
 
-      {/* Daily cost stacked area */}
+      {/* App picker pills */}
+      <AppPickerPills
+        apps={data.apps.map((a) => ({
+          slug: a.slug,
+          display_name: a.display_name,
+        }))}
+      />
+
+      {/* Active flags strip (conditional) */}
+      {data.flags.length > 0 ? (
+        <section>
+          <div
+            className="mb-2 text-[0.65rem] font-semibold uppercase tracking-wider"
+            style={{ color: "var(--fg-label)" }}
+          >
+            Active flags
+          </div>
+          <FlagCallouts flags={data.flags} />
+        </section>
+      ) : null}
+
+      {/* Portfolio scorecard */}
       <Card>
-        <CardHeader title="Daily cost — last 30 days" />
-        <div className="p-4">
-          <DailyCostArea data={daily.series} apps={daily.apps} />
+        <div className="card-header flex items-center justify-between">
+          <span>Portfolio scorecard</span>
+          <span className="normal-case tracking-normal text-[0.7rem]" style={{ color: "var(--fg-dim)" }}>
+            {data.apps.length} apps
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr
+                className="text-[0.62rem] uppercase tracking-wider"
+                style={{ color: "var(--fg-label)" }}
+              >
+                <th className="px-4 py-3 text-left">App</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">14d trend</th>
+                <th className="px-4 py-3 text-right">Thumbs-up</th>
+                <th className="px-4 py-3 text-right">Cost / helpful</th>
+                <th className="px-4 py-3 text-right">Spend</th>
+                <th className="px-4 py-3 text-right">&nbsp;</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.apps.map((row) => (
+                <ScorecardRow key={row.slug} row={row} days={days} />
+              ))}
+              {data.apps.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-4 py-10 text-center text-sm"
+                    style={{ color: "var(--fg-muted)" }}
+                  >
+                    No apps yet.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </Card>
-
-      {/* Two-column: cost by model + cost by app donut */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
-          <CardHeader title="Cost by model" />
-          <div className="p-4">
-            <CostByModelBar data={byModel} />
-          </div>
-        </Card>
-        <Card className="lg:col-span-2">
-          <CardHeader title="Cost by app" />
-          <div className="p-4">
-            <CostByAppDonut data={byApp} />
-          </div>
-        </Card>
-      </div>
-
-      {/* Latency overview */}
-      <Card>
-        <CardHeader title="Latency — p50 / p95" />
-        <div className="p-4">
-          <LatencyLine data={latency} />
-        </div>
-      </Card>
-
-      {/* Footer strip */}
-      <div
-        className="flex items-center justify-between pt-2 text-xs"
-        style={{ color: "var(--fg-dim)" }}
-      >
-        <span>
-          Updated just now · {formatCompact(stats.totalEventsAllTime)} events tracked all-time
-        </span>
-        <span>
-          Built by Cody ·{" "}
-          <a className="hover:text-[var(--fg)]" href="https://hirecody.dev">
-            portfolio
-          </a>
-        </span>
-      </div>
     </div>
+  );
+}
+
+function ScorecardRow({
+  row,
+  days,
+}: {
+  row: Awaited<ReturnType<typeof getOverviewData>>["apps"][number];
+  days: number;
+}) {
+  const thumbs = row.thumbs_up_rate;
+  const thumbsLabel =
+    thumbs == null
+      ? "— awaiting feedback"
+      : `${(thumbs * 100).toFixed(0)}%`;
+  const cphiLabel =
+    row.cost_per_helpful == null
+      ? "— awaiting feedback"
+      : formatUsd(row.cost_per_helpful);
+
+  const sparkPoints = row.sparkline_14d.map((p) => p.cost);
+  const tone: "ok" | "warn" | "idle" = row.status;
+
+  return (
+    <tr
+      className="border-t align-middle"
+      style={{ borderColor: "var(--border-soft)" }}
+    >
+      <td className="px-4 py-3">
+        <div className="font-medium">{row.display_name}</div>
+        <div
+          className="text-[0.68rem]"
+          style={{ color: "var(--fg-dim)" }}
+        >
+          {row.slug}
+        </div>
+      </td>
+      <td className="px-4 py-3">
+        <span
+          className="inline-flex items-center gap-2"
+          title={row.status_reason}
+        >
+          <StatusDot tone={tone} title={row.status_reason} />
+          <span className="text-xs capitalize" style={{ color: "var(--fg-muted)" }}>
+            {tone}
+          </span>
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <Sparkline points={sparkPoints} />
+      </td>
+      <td className="px-4 py-3 text-right">
+        {thumbs == null ? (
+          <span
+            className="text-xs"
+            style={{ color: "var(--fg-dim)" }}
+          >
+            {thumbsLabel}
+          </span>
+        ) : (
+          <div className="inline-flex items-center justify-end gap-2">
+            <div
+              className="h-1.5 w-16 overflow-hidden rounded-full"
+              style={{ background: "var(--bg-elev-2)" }}
+            >
+              <div
+                className="h-full"
+                style={{
+                  width: `${Math.round(thumbs * 100)}%`,
+                  background: "#4F7A58",
+                }}
+              />
+            </div>
+            <span className="tnum text-xs">{thumbsLabel}</span>
+            <span
+              className="tnum text-[0.65rem]"
+              style={{ color: "var(--fg-dim)" }}
+            >
+              ({formatCompact(row.helpful_interactions + row.thumbs_down)})
+            </span>
+          </div>
+        )}
+      </td>
+      <td className="px-4 py-3 text-right tnum">{cphiLabel}</td>
+      <td
+        className="px-4 py-3 text-right tnum"
+        style={{ color: "var(--fg-muted)" }}
+      >
+        {formatUsd(row.cost_usd)}
+      </td>
+      <td className="px-4 py-3 text-right">
+        <Link
+          href={`/apps/${row.slug}?days=${days}`}
+          className="text-xs font-medium"
+          style={{ color: "var(--fg-accent, #C56A2D)" }}
+        >
+          Open →
+        </Link>
+      </td>
+    </tr>
   );
 }
