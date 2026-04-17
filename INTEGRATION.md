@@ -6,10 +6,10 @@ This is the only doc you need to wire a new app into the observability collector
 
 ## TL;DR
 
-1. Create the app at `https://<your-obs-domain>/admin/apps` → "New app". Copy the API key that appears once.
+1. Create the app at `https://obs.hirecody.dev/admin/apps` → "New app". Copy the API key that appears once.
 2. Store the key and the endpoint in your new app's env:
    ```
-   OBS_ENDPOINT=https://<your-obs-domain>/api/events
+   OBS_ENDPOINT=https://obs.hirecody.dev/api/events
    OBS_API_KEY=obs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    OBS_APP_SLUG=my-new-app
    ```
@@ -37,7 +37,7 @@ Keys look like `obs_` followed by 32 hex characters.
 ## 2. Endpoint
 
 ```
-POST  https://<your-obs-domain>/api/events
+POST  https://obs.hirecody.dev/api/events
 ```
 
 Headers:
@@ -70,7 +70,7 @@ Error responses:
 For apps that need to enforce a hard daily spend cap with `obs` as the authoritative source of truth. Call this before each provider request and refuse the call if the returned cost has already crossed your cap.
 
 ```
-GET  https://<your-obs-domain>/api/apps/<slug>/spend?window=today
+GET  https://obs.hirecody.dev/api/apps/<slug>/spend?window=today
 ```
 
 Headers:
@@ -127,6 +127,53 @@ if (cost_usd >= DAILY_CAP_USD) {
 ```
 
 Important: the chatbot should **not** maintain its own running total. Always ask `obs` — it is the source of truth, and every call writes to the same `events` table this endpoint reads from.
+
+---
+
+## 2b. Feedback endpoint (thumbs up / down)
+
+For apps that collect per-message (or per-run) user feedback. Writes to a separate `feedback` table that the dashboard joins against on the App Detail page to surface a satisfaction rate.
+
+```
+POST  https://obs.hirecody.dev/api/feedback
+```
+
+Headers:
+
+| Header         | Value                |
+|----------------|----------------------|
+| `content-type` | `application/json`   |
+| `x-api-key`    | Your `obs_...` key   |
+
+The key must belong to the app named in `app_slug`. A valid key for a *different* app returns `401`.
+
+Body:
+
+| Field         | Type                                        | Required | Notes                                                         |
+|---------------|---------------------------------------------|----------|---------------------------------------------------------------|
+| `app_slug`    | string                                      | **Yes**  | Must match the app the API key belongs to.                    |
+| `entity_type` | `"chatbot_message"` / `"forge_run"`         | **Yes**  | Pick `chatbot_message` for a standalone chatbot-style app.    |
+| `entity_id`   | string                                      | **Yes**  | Your stable id for the message/run being rated.               |
+| `vote`        | `"up"` / `"down"`                           | **Yes**  | Thumbs.                                                       |
+| `model`       | string                                      | No       | Model that produced the response — helps group by model on dashboards. |
+
+Response on success (HTTP 201):
+
+```json
+{ "feedback": { "id": "...", "created_at": "2026-04-17T12:34:56.000Z" } }
+```
+
+Idempotency is **DB-enforced** via a unique `(app_slug, entity_type, entity_id)` constraint. First write wins. A duplicate returns `409 already voted` — treat this as "user already rated this message" and lock the UI button.
+
+Error responses:
+
+| Status | Meaning                                                                |
+|--------|------------------------------------------------------------------------|
+| 400    | Payload schema invalid (see `details`)                                 |
+| 401    | Missing `x-api-key`, invalid key, or key belongs to a different app    |
+| 404    | `app_slug` does not correspond to any app                              |
+| 409    | Already voted on this entity — treat as success, lock the UI button    |
+| 500    | Database insert failed                                                 |
 
 ---
 
@@ -380,6 +427,8 @@ curl -X POST "$OBS_ENDPOINT" \
 - [ ] For serverless runtimes, `await obs.flush()` before returning
 - [ ] Verify events show up on `/live` within 2 seconds
 - [ ] Confirm the model exists in `/admin/pricing` so cost isn't `0`
+- [ ] (Optional) Wire thumbs up/down via `POST /api/feedback` with `entity_type: "chatbot_message"`
+- [ ] (Optional) Enforce a hard daily cap via `GET /api/apps/<slug>/spend?window=today`
 - [ ] (Optional) Set a monthly budget at `/admin/apps` — over-budget triggers the banner
 
 ---
