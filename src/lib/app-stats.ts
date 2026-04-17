@@ -6,6 +6,7 @@ import { createServiceClient } from "./supabase/server";
 import { startOfMonthIso, nDaysAgoIso } from "./utils";
 import type { AppRow, EventWithApp } from "./types";
 import { getEventsInRange } from "./aggregates";
+import { getFeedbackByDay } from "./feedback";
 
 export type AppCardStats = {
   app: AppRow;
@@ -72,6 +73,9 @@ export type AppDetailStats = {
   cost_over_time: { date: string; cost: number }[];
   model_breakdown: { model: string; calls: number; provider: string }[];
   error_rate_over_time: { date: string; rate: number }[];
+  success_rate_over_time: { date: string; rate: number }[];
+  thumbs_over_time: { date: string; up: number; down: number }[];
+  latency_over_time: { date: string; p95: number }[];
   latency: { p50: number; p95: number; p99: number; histogram: { bucket: string; count: number }[] };
   metadata_summary: { key: string; value: string | number; count: number }[];
 };
@@ -90,11 +94,10 @@ export async function getAppDetailStats(
     .maybeSingle();
   if (!appRow) return null;
 
-  const events: EventWithApp[] = await getEventsInRange(
-    nDaysAgoIso(days),
-    undefined,
-    appSlug,
-  );
+  const [events, thumbsByDay] = await Promise.all([
+    getEventsInRange(nDaysAgoIso(days), undefined, appSlug) as Promise<EventWithApp[]>,
+    getFeedbackByDay(appSlug, days),
+  ]);
 
   const cost = events.reduce((s, e) => s + Number(e.cost_usd), 0);
   const tokens = events.reduce((s, e) => s + e.input_tokens + e.output_tokens, 0);
@@ -118,6 +121,7 @@ export async function getAppDetailStats(
   const callsByDay = new Map<string, number>();
   const costByDay = new Map<string, number>();
   const errByDay = new Map<string, { total: number; err: number }>();
+  const latByDay = new Map<string, number[]>();
   for (const e of events) {
     const d = e.timestamp.slice(0, 10);
     callsByDay.set(d, (callsByDay.get(d) ?? 0) + 1);
@@ -126,6 +130,11 @@ export async function getAppDetailStats(
     bucket.total++;
     if (e.status === "error") bucket.err++;
     errByDay.set(d, bucket);
+    if (e.latency_ms != null) {
+      const arr = latByDay.get(d) ?? [];
+      arr.push(e.latency_ms);
+      latByDay.set(d, arr);
+    }
   }
 
   // Model breakdown
@@ -190,6 +199,20 @@ export async function getAppDetailStats(
         date: d,
         rate: bucket && bucket.total > 0 ? bucket.err / bucket.total : 0,
       };
+    }),
+    success_rate_over_time: dayKeys.map((d) => {
+      const bucket = errByDay.get(d);
+      // No traffic on a day → show 100% success (nothing broke).
+      const rate = bucket && bucket.total > 0 ? 1 - bucket.err / bucket.total : 1;
+      return { date: d, rate };
+    }),
+    thumbs_over_time: thumbsByDay,
+    latency_over_time: dayKeys.map((d) => {
+      const arr = latByDay.get(d);
+      if (!arr || arr.length === 0) return { date: d, p95: 0 };
+      const sorted = [...arr].sort((a, b) => a - b);
+      const idx = Math.min(sorted.length - 1, Math.floor(0.95 * sorted.length));
+      return { date: d, p95: sorted[idx] };
     }),
     latency: { p50: pctile(50), p95: pctile(95), p99: pctile(99), histogram: hist },
     metadata_summary,

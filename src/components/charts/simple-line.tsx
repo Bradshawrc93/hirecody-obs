@@ -20,7 +20,7 @@ function formatY(v: number, format: YFormat): string {
   return String(v);
 }
 
-/** Generic single-series line chart with dark-theme styling. */
+/** Generic line chart with dark-theme styling. Pass `series` for multi-line. */
 export function SimpleLine({
   data,
   xKey,
@@ -30,15 +30,19 @@ export function SimpleLine({
   height = 200,
   baseline,
   baselineLabel,
+  series,
+  domain,
 }: {
   data: Array<Record<string, number | string>>;
   xKey: string;
-  yKey: string;
+  yKey?: string;
   yFormat?: YFormat;
   color?: string;
   height?: number;
   baseline?: number;
   baselineLabel?: string;
+  series?: { key: string; label: string; color: string }[];
+  domain?: [number | "auto", number | "auto"];
 }) {
   return (
     <div style={{ width: "100%", height }}>
@@ -58,6 +62,7 @@ export function SimpleLine({
             axisLine={{ stroke: "#E5DDD0" }}
             tickLine={false}
             width={60}
+            domain={domain}
           />
           <Tooltip
             contentStyle={{
@@ -83,13 +88,27 @@ export function SimpleLine({
               }}
             />
           ) : null}
-          <Line
-            type="monotone"
-            dataKey={yKey}
-            stroke={color}
-            strokeWidth={2}
-            dot={false}
-          />
+          {series && series.length > 0 ? (
+            series.map((s) => (
+              <Line
+                key={s.key}
+                type="monotone"
+                dataKey={s.key}
+                name={s.label}
+                stroke={s.color}
+                strokeWidth={2}
+                dot={false}
+              />
+            ))
+          ) : (
+            <Line
+              type="monotone"
+              dataKey={yKey as string}
+              stroke={color}
+              strokeWidth={2}
+              dot={false}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>

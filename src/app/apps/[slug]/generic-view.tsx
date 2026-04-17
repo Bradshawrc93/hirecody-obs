@@ -1,7 +1,5 @@
 import { Card, CardHeader } from "@/components/ui/card";
 import { SimpleLine } from "@/components/charts/simple-line";
-import { ModelDonut } from "@/components/charts/model-donut";
-import { HistogramBars } from "@/components/charts/histogram-bars";
 import { formatCompact, formatMs, formatUsd } from "@/lib/utils";
 import type { AppDetailStats } from "@/lib/app-stats";
 
@@ -50,50 +48,71 @@ export function GenericView({ slug, data: stats }: { slug: string; data: AppDeta
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Model breakdown" />
+          <CardHeader
+            title="p95 latency"
+            right={
+              <span
+                className="text-[0.7rem] tnum"
+                style={{ color: "var(--fg-dim)" }}
+              >
+                overall {formatMs(stats.latency.p95)}
+              </span>
+            }
+          />
           <div className="p-4">
-            {stats.model_breakdown.length > 0 ? (
-              <ModelDonut
-                data={stats.model_breakdown.map((m) => ({
-                  model: m.model,
-                  value: m.calls,
-                  provider: m.provider,
-                }))}
-              />
-            ) : (
-              <EmptyChart />
-            )}
+            <SimpleLine
+              data={stats.latency_over_time}
+              xKey="date"
+              yKey="p95"
+              color="#C56A2D"
+            />
           </div>
         </Card>
         <Card>
-          <CardHeader title="Error rate" />
+          <CardHeader title="Thumbs received" />
           <div className="p-4">
-            <SimpleLine
-              data={stats.error_rate_over_time}
-              xKey="date"
-              yKey="rate"
-              color="#B04A3B"
-              yFormat="percent"
-            />
+            {stats.thumbs_over_time.every((d) => d.up === 0 && d.down === 0) ? (
+              <div
+                className="flex h-[200px] items-center justify-center text-xs"
+                style={{ color: "var(--fg-dim)" }}
+              >
+                No thumbs feedback in this range.
+              </div>
+            ) : (
+              <SimpleLine
+                data={stats.thumbs_over_time}
+                xKey="date"
+                series={[
+                  { key: "up", label: "Thumbs up", color: "#4F7A58" },
+                  { key: "down", label: "Thumbs down", color: "#B04A3B" },
+                ]}
+              />
+            )}
           </div>
         </Card>
       </div>
 
       <Card>
-        <CardHeader title="Latency distribution" />
-        <div className="grid grid-cols-1 gap-6 p-4 lg:grid-cols-4">
-          <div className="lg:col-span-3">
-            {stats.latency.histogram.length > 0 ? (
-              <HistogramBars data={stats.latency.histogram} />
-            ) : (
-              <EmptyChart />
-            )}
-          </div>
-          <div className="flex flex-col justify-center gap-4">
-            <Callout label="p50" value={formatMs(stats.latency.p50)} />
-            <Callout label="p95" value={formatMs(stats.latency.p95)} />
-            <Callout label="p99" value={formatMs(stats.latency.p99)} />
-          </div>
+        <CardHeader
+          title="Success rate"
+          right={
+            <span
+              className="text-[0.7rem]"
+              style={{ color: "var(--fg-dim)" }}
+            >
+              % of calls without an error
+            </span>
+          }
+        />
+        <div className="p-4">
+          <SimpleLine
+            data={stats.success_rate_over_time}
+            xKey="date"
+            yKey="rate"
+            color="#4F7A58"
+            yFormat="percent"
+            domain={[0, 1]}
+          />
         </div>
       </Card>
     </div>
@@ -116,30 +135,3 @@ function StatTile({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Callout({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      className="rounded-md border px-4 py-3"
-      style={{ borderColor: "var(--border-soft)" }}
-    >
-      <div
-        className="text-[0.65rem] font-semibold uppercase tracking-wider"
-        style={{ color: "var(--fg-label)" }}
-      >
-        {label}
-      </div>
-      <div className="mt-1 text-lg font-semibold tnum">{value}</div>
-    </div>
-  );
-}
-
-function EmptyChart() {
-  return (
-    <div
-      className="flex h-[200px] items-center justify-center text-xs"
-      style={{ color: "var(--fg-dim)" }}
-    >
-      No data in this range.
-    </div>
-  );
-}
