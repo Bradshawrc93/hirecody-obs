@@ -1,7 +1,6 @@
 import { Card, CardHeader } from "@/components/ui/card";
 import { FlagCallouts } from "@/components/flag-callouts";
 import { SimpleLine } from "@/components/charts/simple-line";
-import { ModelDonut } from "@/components/charts/model-donut";
 import { formatCompact, formatMs, formatUsd } from "@/lib/utils";
 import type { ChatbotViewData } from "@/lib/app-view";
 
@@ -94,17 +93,24 @@ export function ChatbotView({ data }: { data: ChatbotViewData }) {
           </div>
         </Card>
         <Card>
-          <CardHeader title="Model mix (by spend)" />
-          <div id="model-efficiency" className="p-4">
-            {data.model_spend.length === 0 ? (
-              <Empty height={200}>No model spend in this range.</Empty>
+          <CardHeader
+            title="p95 latency"
+            right={
+              <span
+                className="text-[0.7rem] tnum"
+                style={{ color: "var(--fg-dim)" }}
+              >
+                4w baseline {Math.round(data.baseline_p95)}ms
+              </span>
+            }
+          />
+          <div id="latency" className="p-4">
+            {data.latency_trend.length === 0 ? (
+              <Empty height={200}>No latency data in this range.</Empty>
             ) : (
-              <ModelDonut
-                data={data.model_spend.map((m) => ({
-                  model: m.model,
-                  value: m.cost,
-                  provider: m.model,
-                }))}
+              <LatencyWithBaseline
+                data={data.latency_trend}
+                baseline={data.baseline_p95}
               />
             )}
           </div>
@@ -175,16 +181,6 @@ export function ChatbotView({ data }: { data: ChatbotViewData }) {
         </div>
       </Card>
 
-      {/* Latency with baseline band */}
-      <Card>
-        <CardHeader title="p95 latency" />
-        <div id="latency" className="p-4">
-          <LatencyWithBaseline
-            data={data.latency_trend}
-            baseline={data.baseline_p95}
-          />
-        </div>
-      </Card>
     </div>
   );
 }
