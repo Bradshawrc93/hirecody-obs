@@ -185,9 +185,12 @@ function ScorecardRow({
   days: number;
 }) {
   const thumbs = row.thumbs_up_rate;
+  const feedbackDisabled = row.type === "beacon" || row.slug === "beacon";
   const thumbsLabel =
     thumbs == null
-      ? "— awaiting feedback"
+      ? feedbackDisabled
+        ? "—"
+        : "— awaiting feedback"
       : `${(thumbs * 100).toFixed(0)}%`;
 
   const value =

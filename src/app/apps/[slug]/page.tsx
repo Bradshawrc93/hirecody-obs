@@ -1,13 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { getAppConfig, getChatbotViewData, getForgeViewData } from "@/lib/app-view";
+import {
+  getAppConfig,
+  getChatbotViewData,
+  getForgeViewData,
+  getBeaconViewData,
+} from "@/lib/app-view";
 import { getAppDetailStats } from "@/lib/app-stats";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { StatusDot } from "@/components/ui/status-dot";
 import { ChatbotView } from "./chatbot-view";
 import { ForgeView } from "./forge-view";
 import { GenericView } from "./generic-view";
+import { BeaconView } from "./beacon-view";
 
 /**
  * Per-app view — branches on `apps.type`:
@@ -36,6 +42,8 @@ export default async function AppDetailPage({
   const app = await getAppConfig(slug);
   if (!app) notFound();
 
+  const isBeacon = app.type === "beacon" || app.slug === "beacon";
+
   let body: React.ReactNode;
   if (app.type === "chatbot") {
     const data = await getChatbotViewData(app, days);
@@ -43,6 +51,9 @@ export default async function AppDetailPage({
   } else if (app.type === "forge") {
     const data = await getForgeViewData(app, days);
     body = <ForgeView data={data} />;
+  } else if (isBeacon) {
+    const data = await getBeaconViewData(app, days);
+    body = <BeaconView data={data} />;
   } else {
     const data = await getAppDetailStats(slug, days);
     if (!data) notFound();
@@ -69,6 +80,8 @@ export default async function AppDetailPage({
               ? "Chatbot operational view."
               : app.type === "forge"
               ? "Forge per-agent view."
+              : isBeacon
+              ? "Beacon adoption & onboarding view."
               : "Generic per-app metrics."}
           </p>
         </div>

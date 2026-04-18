@@ -27,7 +27,7 @@ import {
 import { valueDelivered, costPerHelpfulInteraction } from "./value";
 import type { AppRow } from "./types";
 
-export type AppType = "manual" | "chatbot" | "forge";
+export type AppType = "manual" | "chatbot" | "forge" | "beacon";
 
 export type ScorecardAppRow = {
   slug: string;

@@ -8,6 +8,7 @@
 
 import { createServiceClient } from "./supabase/server";
 import { nDaysAgoIso } from "./utils";
+import { beaconGet, BeaconError } from "./beacon";
 import {
   getFeedbackByAppAndModel,
   getFeedbackByDay,
@@ -31,7 +32,7 @@ import {
   dailyRunBuckets,
 } from "./forge/aggregates";
 
-export type AppType = "manual" | "chatbot" | "forge";
+export type AppType = "manual" | "chatbot" | "forge" | "beacon";
 
 export type AppConfigRow = AppRow & {
   type: AppType;
@@ -598,5 +599,114 @@ export async function getForgeViewData(
     failed_runs: failedRuns.slice(0, 50),
     failed_run_groups: failedRunGroups,
     daily_series: dailySeries,
+  };
+}
+
+// ---- Beacon view ---------------------------------------------------------
+
+export type BeaconViewData = {
+  display_name: string;
+  slug: string;
+  range_days: number;
+
+  llm_cost: number;
+  llm_calls: number;
+
+  stats_available: boolean;
+  stats_error: string | null;
+
+  accounts_total: number;
+  accounts_new_in_range: number;
+  active_accounts: number;
+  logins_in_range: number;
+  training_total: number;
+  training_completed: number;
+
+  signups_by_day: { date: string; count: number }[];
+  logins_by_day: { date: string; count: number }[];
+  training_by_day: { date: string; completed: number; pending: number }[];
+  success_rate_by_day: { date: string; rate: number }[];
+};
+
+type BeaconStatsResponse = {
+  accounts_total: number;
+  accounts_new_in_range: number;
+  active_accounts: number;
+  logins_in_range: number;
+  training_total: number;
+  training_completed: number;
+  signups_by_day: { date: string; count: number }[];
+  logins_by_day: { date: string; count: number }[];
+  training_by_day: { date: string; completed: number; pending: number }[];
+  success_rate_by_day: { date: string; rate: number }[];
+};
+
+export async function getBeaconViewData(
+  app: AppConfigRow,
+  days: number,
+): Promise<BeaconViewData> {
+  const db = createServiceClient();
+
+  // LLM spend from the collector — always available whether or not Beacon
+  // exposes its own stats endpoint.
+  const { data: eventsData } = await db
+    .from("events")
+    .select("cost_usd, timestamp")
+    .eq("app_id", app.id)
+    .gte("timestamp", nDaysAgoIso(days))
+    .limit(50000);
+  const events = (eventsData ?? []) as { cost_usd: number; timestamp: string }[];
+  const llm_cost = events.reduce((s, e) => s + Number(e.cost_usd ?? 0), 0);
+  const llm_calls = events.length;
+
+  let stats: BeaconStatsResponse | null = null;
+  let stats_error: string | null = null;
+  try {
+    stats = await beaconGet<BeaconStatsResponse>(`/api/admin/stats?days=${days}`);
+  } catch (err) {
+    stats_error =
+      err instanceof BeaconError ? `beacon ${err.status}` : (err as Error).message;
+  }
+
+  if (!stats) {
+    return {
+      display_name: app.display_name,
+      slug: app.slug,
+      range_days: days,
+      llm_cost,
+      llm_calls,
+      stats_available: false,
+      stats_error,
+      accounts_total: 0,
+      accounts_new_in_range: 0,
+      active_accounts: 0,
+      logins_in_range: 0,
+      training_total: 0,
+      training_completed: 0,
+      signups_by_day: [],
+      logins_by_day: [],
+      training_by_day: [],
+      success_rate_by_day: [],
+    };
+  }
+
+  return {
+    display_name: app.display_name,
+    slug: app.slug,
+    range_days: days,
+    llm_cost,
+    llm_calls,
+    stats_available: true,
+    stats_error: null,
+    accounts_total: stats.accounts_total,
+    accounts_new_in_range: stats.accounts_new_in_range,
+    active_accounts: stats.active_accounts,
+    logins_in_range: stats.logins_in_range,
+    training_total: stats.training_total,
+    training_completed: stats.training_completed,
+    signups_by_day: stats.signups_by_day,
+    logins_by_day: stats.logins_by_day,
+    training_by_day: stats.training_by_day,
+    success_rate_by_day: stats.success_rate_by_day,
   };
 }
