@@ -43,7 +43,19 @@ type BeaconInit = RequestInit & {
   json?: unknown;
   /** Optional — included as `x-admin-email` for Beacon's audit trail only. */
   adminEmail?: string;
+  /** Override the default 15s client-side abort. Used by LLM-backed endpoints. */
+  timeoutMs?: number;
 };
+
+const DEFAULT_TIMEOUT_MS = 15_000;
+// LLM-backed paths that can take a minute+ to return. Matched as prefix.
+const SLOW_PATH_PREFIXES = ["/api/admin/products/", "/api/admin/drafts/"];
+const SLOW_TIMEOUT_MS = 90_000;
+
+function timeoutForPath(path: string): number {
+  if (SLOW_PATH_PREFIXES.some((p) => path.startsWith(p))) return SLOW_TIMEOUT_MS;
+  return DEFAULT_TIMEOUT_MS;
+}
 
 /**
  * Server-only fetch against the Beacon API. Requires the Obs admin
@@ -71,7 +83,7 @@ export async function beaconFetch(path: string, init: BeaconInit = {}): Promise<
     headers,
     body: init.json !== undefined ? JSON.stringify(init.json) : init.body,
     cache: "no-store",
-    signal: init.signal ?? AbortSignal.timeout(15_000),
+    signal: init.signal ?? AbortSignal.timeout(init.timeoutMs ?? timeoutForPath(path)),
   });
 }
 

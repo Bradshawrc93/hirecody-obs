@@ -4,6 +4,9 @@ import { beaconFetch, getAdminEmail, BeaconError } from "@/lib/beacon";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// LLM-backed Beacon endpoints (draft content generation, scans) can
+// take ~30–60s. Default Vercel timeout is 10s on hobby plans.
+export const maxDuration = 120;
 
 /**
  * Generic proxy: /api/admin/beacon/<rest> → ${BEACON_BASE_URL}/api/admin/<rest>
