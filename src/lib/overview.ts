@@ -25,6 +25,7 @@ import {
   type PortfolioFlag,
 } from "./flags";
 import { valueDelivered, costPerHelpfulInteraction } from "./value";
+import { beaconGet } from "./beacon";
 import type { AppRow } from "./types";
 
 export type AppType = "manual" | "chatbot" | "forge" | "beacon";
@@ -147,6 +148,26 @@ export async function getOverviewData(rangeDays = 90): Promise<OverviewData> {
   const apps = (appsRes.data ?? []) as AppWithConfig[];
   const events = (eventsRes.data ?? []) as EventRow[];
 
+  // Best-effort pull of Beacon's 14d signup series so the scorecard
+  // sparkline reflects onboarding activity, not LLM spend. Silently
+  // ignored if Beacon hasn't shipped the endpoint or we aren't admin.
+  const beaconApp = apps.find(
+    (a) => a.type === "beacon" || a.slug === "beacon",
+  );
+  let beaconSignupsByDay = new Map<string, number>();
+  if (beaconApp) {
+    try {
+      const stats = await beaconGet<{
+        signups_by_day?: { date: string; count: number }[];
+      }>("/api/admin/stats?days=14");
+      for (const d of stats.signups_by_day ?? []) {
+        beaconSignupsByDay.set(d.date, d.count);
+      }
+    } catch {
+      beaconSignupsByDay = new Map();
+    }
+  }
+
   // Forge runs within the range — counted as usage for forge-typed apps.
   const forgeAppIds = apps.filter((a) => a.type === "forge").map((a) => a.id);
   let forgeRunRows: { app_id: string; created_at: string }[] = [];
@@ -228,12 +249,18 @@ export async function getOverviewData(rangeDays = 90): Promise<OverviewData> {
     last7Latencies.sort((a, b) => a - b);
     baselineLatencies.sort((a, b) => a - b);
 
+    const isBeacon = app.type === "beacon" || app.slug === "beacon";
     const sparkline_14d: { date: string; cost: number }[] = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = d.toISOString().slice(0, 10);
-      sparkline_14d.push({ date: key, cost: sparkCostByDay.get(key) ?? 0 });
+      // Beacon's "activity" is signups, not LLM spend — sparkline
+      // reuses the `cost` key for layout but carries signup count.
+      const value = isBeacon
+        ? beaconSignupsByDay.get(key) ?? 0
+        : sparkCostByDay.get(key) ?? 0;
+      sparkline_14d.push({ date: key, cost: value });
     }
 
     const cphi = costPerHelpfulInteraction(rangeCost, counts.up);
@@ -291,14 +318,19 @@ export async function getOverviewData(rangeDays = 90): Promise<OverviewData> {
     // Status ------------------------------------------------------------
     let status: ScorecardAppRow["status"] = "ok";
     let status_reason = "All signals within range.";
-    if (appEvents.length === 0 && totalVotes === 0) {
-      status = "idle";
-      status_reason = "No activity in the selected range.";
-    } else if (perAppFlags.length > 0) {
+    if (perAppFlags.length > 0) {
       status = "warn";
       status_reason = perAppFlags
         .map((f) => flagReason(f))
         .join(" · ");
+    } else if (isBeacon) {
+      // Beacon is the onboarding/training app — "no LLM events" is the
+      // expected steady state, not an idle warning. Treat it as ok.
+      status = "ok";
+      status_reason = "Beacon is live.";
+    } else if (appEvents.length === 0 && totalVotes === 0) {
+      status = "idle";
+      status_reason = "No activity in the selected range.";
     }
 
     return {
