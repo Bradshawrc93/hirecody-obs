@@ -112,6 +112,12 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
           <ArrowLeft size={16} className="shrink-0" />
           <span>Back</span>
         </a>
+        <a
+          href="https://forge.hirecody.dev"
+          className="mb-3 flex items-center gap-3 rounded-md px-3 py-2 text-sm text-[var(--fg-muted)] transition-colors hover:bg-[var(--bg-elev-2)] hover:text-[var(--fg)]"
+        >
+          <span>Forge</span>
+        </a>
         <div className="mb-3">{publicNav.map(renderItem)}</div>
         {isAdmin ? (
           <div className="mt-4">
