@@ -106,7 +106,7 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
       <nav className="flex-1 overflow-y-auto p-3">
         {/* Back to portfolio — filled burnt orange pill */}
         <a
-          href="https://www.hirecody.dev/apps"
+          href="https://hirecody.dev/apps#probes"
           className="mb-3 flex items-center gap-3 rounded-md bg-[#C56A2D] px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-[#A85A24]"
         >
           <ArrowLeft size={16} className="shrink-0" />
