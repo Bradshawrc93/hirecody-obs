@@ -28,28 +28,28 @@ export function DailyCostArea({
     <div style={{ width: "100%", height: 260 }}>
       <ResponsiveContainer>
         <AreaChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="#E5DDD0" vertical={false} />
+          <CartesianGrid stroke="#C8DCD0" vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fill: "#6B6B6B", fontSize: 11 }}
+            tick={{ fill: "#4F6B5F", fontSize: 11 }}
             tickFormatter={(v) => String(v).slice(5)}
-            axisLine={{ stroke: "#E5DDD0" }}
+            axisLine={{ stroke: "#C8DCD0" }}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: "#6B6B6B", fontSize: 11 }}
+            tick={{ fill: "#4F6B5F", fontSize: 11 }}
             tickFormatter={(v) => formatUsd(Number(v))}
-            axisLine={{ stroke: "#E5DDD0" }}
+            axisLine={{ stroke: "#C8DCD0" }}
             tickLine={false}
             width={60}
           />
           <Tooltip
             contentStyle={{
-              background: "#FAF7F2",
-              border: "1px solid #E5DDD0",
+              background: "#F1F6F2",
+              border: "1px solid #C8DCD0",
               borderRadius: 8,
               fontSize: 12,
-              color: "#2B2B2B",
+              color: "#15302A",
             }}
             formatter={(v, name) => [formatUsd(Number(v)), String(name)]}
           />

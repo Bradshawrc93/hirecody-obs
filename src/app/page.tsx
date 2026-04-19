@@ -248,7 +248,7 @@ function ScorecardRow({
                 className="h-full"
                 style={{
                   width: `${Math.round(thumbs * 100)}%`,
-                  background: "#4F7A58",
+                  background: "#5B9378",
                 }}
               />
             </div>
@@ -288,7 +288,7 @@ function ScorecardRow({
             net == null
               ? "var(--fg-dim)"
               : net >= 0
-              ? "#4F7A58"
+              ? "#5B9378"
               : "#B04A3B",
         }}
       >
@@ -298,7 +298,7 @@ function ScorecardRow({
         <Link
           href={`/apps/${row.slug}?days=${days}`}
           className="text-xs font-medium"
-          style={{ color: "var(--fg-accent, #C56A2D)" }}
+          style={{ color: "var(--fg-accent, #2E7D5B)" }}
         >
           Open →
         </Link>

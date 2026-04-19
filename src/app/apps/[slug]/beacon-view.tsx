@@ -55,7 +55,7 @@ export function BeaconView({ data }: { data: BeaconViewData }) {
                 data={data.signups_by_day}
                 xKey="date"
                 yKey="count"
-                color="#4F7A58"
+                color="#5B9378"
               />
             ) : (
               <Placeholder />
@@ -77,7 +77,7 @@ export function BeaconView({ data }: { data: BeaconViewData }) {
                 data={data.training_by_day}
                 xKey="date"
                 series={[
-                  { key: "completed", label: "Completed", color: "#4F7A58" },
+                  { key: "completed", label: "Completed", color: "#5B9378" },
                   { key: "pending", label: "Not completed", color: "#B04A3B" },
                 ]}
               />
@@ -119,7 +119,7 @@ export function BeaconView({ data }: { data: BeaconViewData }) {
                 data={data.success_rate_by_day}
                 xKey="date"
                 yKey="rate"
-                color="#4F7A58"
+                color="#5B9378"
                 yFormat="percent"
                 domain={[0, 1]}
               />

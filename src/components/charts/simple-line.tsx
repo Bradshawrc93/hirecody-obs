@@ -26,7 +26,7 @@ export function SimpleLine({
   xKey,
   yKey,
   yFormat = "number",
-  color = "#C56A2D",
+  color = "#2E7D5B",
   height = 200,
   baseline,
   baselineLabel,
@@ -48,29 +48,29 @@ export function SimpleLine({
     <div style={{ width: "100%", height }}>
       <ResponsiveContainer>
         <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="#E5DDD0" vertical={false} />
+          <CartesianGrid stroke="#C8DCD0" vertical={false} />
           <XAxis
             dataKey={xKey}
-            tick={{ fill: "#6B6B6B", fontSize: 11 }}
+            tick={{ fill: "#4F6B5F", fontSize: 11 }}
             tickFormatter={(v) => String(v).slice(5)}
-            axisLine={{ stroke: "#E5DDD0" }}
+            axisLine={{ stroke: "#C8DCD0" }}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: "#6B6B6B", fontSize: 11 }}
+            tick={{ fill: "#4F6B5F", fontSize: 11 }}
             tickFormatter={(v) => formatY(Number(v), yFormat)}
-            axisLine={{ stroke: "#E5DDD0" }}
+            axisLine={{ stroke: "#C8DCD0" }}
             tickLine={false}
             width={60}
             domain={domain}
           />
           <Tooltip
             contentStyle={{
-              background: "#FAF7F2",
-              border: "1px solid #E5DDD0",
+              background: "#F1F6F2",
+              border: "1px solid #C8DCD0",
               borderRadius: 8,
               fontSize: 12,
-              color: "#2B2B2B",
+              color: "#15302A",
             }}
             formatter={(v) => formatY(Number(v), yFormat)}
           />
@@ -83,7 +83,7 @@ export function SimpleLine({
               label={{
                 value: baselineLabel ?? `baseline ${formatY(baseline, yFormat)}`,
                 position: "insideTopRight",
-                fill: "#6B6B6B",
+                fill: "#4F6B5F",
                 fontSize: 10,
               }}
             />

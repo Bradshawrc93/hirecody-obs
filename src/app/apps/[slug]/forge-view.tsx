@@ -185,7 +185,7 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
                                 a.last_run_status === "failed"
                                   ? "#B04A3B"
                                   : a.last_run_status === "completed"
-                                  ? "#4F7A58"
+                                  ? "#5B9378"
                                   : a.last_run_status === "running"
                                   ? "#C56A2D"
                                   : "#C2B8A4",
@@ -215,13 +215,13 @@ export function ForgeView({ data }: { data: ForgeViewData }) {
         <Card>
           <CardHeader title="Usage" right={<span className="text-[0.7rem]" style={{color:"var(--fg-dim)"}}>runs / day</span>} />
           <div className="p-3">
-            <SimpleLine data={data.daily_series} xKey="date" yKey="runs" color="#4F7A58" />
+            <SimpleLine data={data.daily_series} xKey="date" yKey="runs" color="#5B9378" />
           </div>
         </Card>
         <Card>
           <CardHeader title="Cost" right={<span className="text-[0.7rem]" style={{color:"var(--fg-dim)"}}>$ / day</span>} />
           <div className="p-3">
-            <SimpleLine data={data.daily_series} xKey="date" yKey="cost" yFormat="usd" color="#C56A2D" />
+            <SimpleLine data={data.daily_series} xKey="date" yKey="cost" yFormat="usd" color="#2E7D5B" />
           </div>
         </Card>
         <Card>

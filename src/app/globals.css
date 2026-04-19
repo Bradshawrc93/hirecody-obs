@@ -1,37 +1,55 @@
 @import "tailwindcss";
 
 /*
- * Warm-light theme — matches hirecody.dev. Sand + charcoal base with
- * burnt-orange accents. Variable *names* are preserved from the earlier
- * dark theme so all consuming components keep working unchanged; only
- * the values are flipped.
+ * Mint-green theme. Soft mint surfaces + deep forest text with a
+ * vibrant forest-mint primary. Variable *names* are preserved from
+ * the prior warm-light theme so all consuming components keep working
+ * unchanged; only the values are swapped.
  */
 
 :root {
   /* Surfaces */
-  --bg:           #FAF7F2;  /* page background — warm off-white */
-  --bg-elev:      #F1E9DD;  /* card — soft sand */
-  --bg-elev-2:    #EDE5D8;  /* nested / hover — darker sand */
-  --bg-hover:     #E4D8C5;  /* active hover fill */
-  --border:       #E5DDD0;  /* soft warm border */
-  --border-soft:  #ECE4D6;
+  --bg:           #F1F6F2;  /* page background — mint-tinted off-white */
+  --bg-elev:      #DCEBE2;  /* card — pale mint */
+  --bg-elev-2:    #D2E2D7;  /* nested / panel */
+  --bg-hover:     #C8DCD0;  /* active hover fill */
+  --border:       #C8DCD0;  /* soft mint border */
+  --border-soft:  #D8E5DC;
 
   /* Text */
-  --fg:           #2B2B2B;  /* charcoal */
-  --fg-muted:     #6B6B6B;
-  --fg-dim:       #8A8A84;
-  --fg-label:     #6B6B6B;
+  --fg:           #15302A;  /* deep forest */
+  --fg-muted:     #4F6B5F;  /* muted sage */
+  --fg-dim:       #7A8F83;
+  --fg-label:     #4F6B5F;
 
-  /* Accents — burnt orange primary, warmed secondaries */
-  --primary:      #C56A2D;
-  --primary-fg:   #FAF7F2;
-  --accent:       #C56A2D;
-  --accent-anthropic: #C56A2D;  /* warm terracotta */
-  --accent-openai:    #4F7A58;  /* muted olive-teal */
-  --accent-other:     #7A6BB0;  /* dusty violet */
+  /* Accents — forest-mint primary */
+  --primary:      #2E7D5B;
+  --primary-fg:   #F1F6F2;
+  --accent:       #2E7D5B;
+  --accent-anthropic: #2E7D5B;  /* forest-mint */
+  --accent-openai:    #5B9378;  /* mid mint */
+  --accent-other:     #7A6BB0;  /* dusty violet — categorical */
   --danger:       #B04A3B;
   --warn:         #C56A2D;
   --ok:           #4F7A58;
+
+  /* shadcn-style aliases (mint palette) — provided for components that
+     reference them directly. These mirror the --bg / --fg / etc. above. */
+  --background: #F1F6F2;
+  --foreground: #15302A;
+  --card: #DCEBE2;
+  --card-foreground: #15302A;
+  --popover: #F1F6F2;
+  --popover-foreground: #15302A;
+  --primary-foreground: #F1F6F2;
+  --secondary: #DCEBE2;
+  --secondary-foreground: #15302A;
+  --muted: #E5EFE8;
+  --muted-foreground: #4F6B5F;
+  --accent-foreground: #F1F6F2;
+  --input: #C8DCD0;
+  --ring: #2E7D5B;
+  --panel: #D2E2D7;
 }
 
 @theme inline {
@@ -86,7 +104,7 @@ html, body {
   color: var(--fg-label);
 }
 
-/* Hoverable card — darker sand + inset shadow on hover, matches hirecody */
+/* Hoverable card — deeper mint + inset shadow on hover */
 .card-hover {
   transition: background-color 200ms ease, box-shadow 200ms ease;
 }
@@ -96,14 +114,14 @@ html, body {
 }
 
 /* Zone — rounded panel with radial-dot texture and pill label.
-   Used to group related cards on a page (matches hirecody portfolio). */
+   Used to group related cards on a page. */
 .zone {
   position: relative;
   border-radius: 1rem;
   border: 1px solid var(--border);
   padding: 2.5rem 1.25rem 1.25rem;
-  background-color: rgba(241, 233, 221, 0.35);
-  background-image: radial-gradient(circle, rgba(43, 43, 43, 0.08) 1px, transparent 1px);
+  background-color: rgba(220, 235, 226, 0.35);
+  background-image: radial-gradient(circle, rgba(21, 48, 42, 0.08) 1px, transparent 1px);
   background-size: 18px 18px;
 }
 @media (min-width: 768px) {
@@ -120,13 +138,13 @@ html, body {
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--fg-muted);
-  background: rgba(250, 247, 242, 0.9);
+  background: rgba(241, 246, 242, 0.9);
   border: 1px solid var(--border);
   border-radius: 9999px;
   padding: 0.25rem 0.625rem;
 }
 
-/* Section eyebrow — matches hirecody "— APPS" section header pattern */
+/* Section eyebrow */
 .section-eyebrow {
   display: flex;
   align-items: center;
@@ -154,12 +172,12 @@ html, body {
   animation: obs-fade-in 220ms ease-out;
 }
 
-/* Scrollbar tuning — warm palette */
+/* Scrollbar tuning — mint palette */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #D4C9B3; }
+::-webkit-scrollbar-thumb:hover { background: #AAC2B2; }
 
-/* Native select — warm theme */
+/* Native select — mint theme */
 select {
   background: var(--bg-elev);
   color: var(--fg);

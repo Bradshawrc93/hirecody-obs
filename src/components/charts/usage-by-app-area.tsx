@@ -11,8 +11,8 @@ import {
 } from "recharts";
 
 const PALETTE = [
-  "#C56A2D",
-  "#4F7A58",
+  "#2E7D5B",
+  "#5B9378",
   "#6E7FA3",
   "#B04A3B",
   "#8A7F6E",
@@ -54,27 +54,27 @@ export function UsageByAppArea({
           data={data}
           margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
         >
-          <CartesianGrid stroke="#E5DDD0" vertical={false} />
+          <CartesianGrid stroke="#C8DCD0" vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fill: "#6B6B6B", fontSize: 11 }}
+            tick={{ fill: "#4F6B5F", fontSize: 11 }}
             tickFormatter={(v) => String(v).slice(5)}
-            axisLine={{ stroke: "#E5DDD0" }}
+            axisLine={{ stroke: "#C8DCD0" }}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: "#6B6B6B", fontSize: 11 }}
-            axisLine={{ stroke: "#E5DDD0" }}
+            tick={{ fill: "#4F6B5F", fontSize: 11 }}
+            axisLine={{ stroke: "#C8DCD0" }}
             tickLine={false}
             width={40}
           />
           <Tooltip
             contentStyle={{
-              background: "#FAF7F2",
-              border: "1px solid #E5DDD0",
+              background: "#F1F6F2",
+              border: "1px solid #C8DCD0",
               borderRadius: 8,
               fontSize: 12,
-              color: "#2B2B2B",
+              color: "#15302A",
             }}
           />
           {keys.map((k, i) => (

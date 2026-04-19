@@ -98,7 +98,7 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
         className="flex items-center gap-2 px-5 py-5 border-b"
         style={{ borderColor: "var(--border-soft)" }}
       >
-        <Server size={20} style={{ color: "#C56A2D" }} strokeWidth={2.25} />
+        <Server size={20} style={{ color: "#2E7D5B" }} strokeWidth={2.25} />
         <span className="text-sm font-semibold">obs</span>
       </div>
 
@@ -107,7 +107,7 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
         {/* Back to portfolio — filled burnt orange pill */}
         <a
           href="https://hirecody.dev/apps#probes"
-          className="mb-3 flex items-center gap-3 rounded-md bg-[#C56A2D] px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-[#A85A24]"
+          className="mb-3 flex items-center gap-3 rounded-md bg-[#2E7D5B] px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-[#1F5F42]"
         >
           <ArrowLeft size={16} className="shrink-0" />
           <span>Back</span>
@@ -172,7 +172,7 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
         }}
       >
         <div className="flex items-center gap-2">
-          <Server size={18} style={{ color: "#C56A2D" }} strokeWidth={2.25} />
+          <Server size={18} style={{ color: "#2E7D5B" }} strokeWidth={2.25} />
           <span className="text-sm font-semibold">obs</span>
         </div>
         <button

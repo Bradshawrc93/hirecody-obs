@@ -50,7 +50,7 @@ export function ReleasesAdmin({ releases }: { releases: BeaconRelease[] }) {
                           <span
                             className="rounded px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-wider"
                             style={{
-                              background: r.type === "major" ? "#C56A2D" : "var(--bg-elev-2)",
+                              background: r.type === "major" ? "#2E7D5B" : "var(--bg-elev-2)",
                               color: r.type === "major" ? "white" : "var(--fg-muted)",
                             }}
                           >

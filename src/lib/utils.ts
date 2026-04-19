@@ -37,18 +37,18 @@ export function formatMs(ms: number | null | undefined): string {
 /** Provider → canonical accent color (matches CSS vars in globals.css). */
 export function providerColor(provider: string): string {
   switch (provider.toLowerCase()) {
-    case "anthropic": return "#C56A2D"; // burnt orange — primary
-    case "openai":    return "#4F7A58"; // muted olive-teal
+    case "anthropic": return "#2E7D5B"; // forest-mint — primary
+    case "openai":    return "#5B9378"; // mid mint
     default:          return "#7A6BB0"; // dusty violet
   }
 }
 
 /** Stable palette for apps on stacked charts — hashed from app id/slug.
- *  Warm earth tones tuned to sit on a sand background. */
+ *  Mint / forest tones tuned for the light mint UI shell. */
 export function appColor(seed: string): string {
   const palette = [
-    "#C56A2D", // burnt orange
-    "#4F7A58", // olive-teal
+    "#2E7D5B", // forest-mint
+    "#5B9378", // mid mint
     "#7A6BB0", // dusty violet
     "#B08A3E", // warm ochre
     "#8C3829", // deep terracotta

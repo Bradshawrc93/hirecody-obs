@@ -264,7 +264,7 @@ function ThumbsStackedArea({
       data={data}
       xKey="date"
       yKey="up"
-      color="#4F7A58"
+      color="#5B9378"
     />
   );
 }
@@ -281,7 +281,7 @@ function LatencyWithBaseline({
       data={data}
       xKey="date"
       yKey="p95"
-      color="#C56A2D"
+      color="#2E7D5B"
       baseline={baseline}
       baselineLabel={`4w baseline ${Math.round(baseline)}ms`}
     />

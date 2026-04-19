@@ -25,34 +25,34 @@ Defined on `:root` in `globals.css`. Always reference via `var(--token)` — don
 ### Surfaces
 | Token | Hex | Use |
 | --- | --- | --- |
-| `--bg` | `#FAF7F2` | page background (warm off-white) |
-| `--bg-elev` | `#F1E9DD` | cards (soft sand) |
-| `--bg-elev-2` | `#EDE5D8` | nested / hover surface |
-| `--bg-hover` | `#E4D8C5` | active hover fill |
-| `--border` | `#E5DDD0` | standard border |
-| `--border-soft` | `#ECE4D6` | subtle divider |
+| `--bg` | `#F1F6F2` | page background (warm off-white) |
+| `--bg-elev` | `#DCEBE2` | cards (soft sand) |
+| `--bg-elev-2` | `#D2E2D7` | nested / hover surface |
+| `--bg-hover` | `#C8DCD0` | active hover fill |
+| `--border` | `#C8DCD0` | standard border |
+| `--border-soft` | `#D8E5DC` | subtle divider |
 
 ### Text
 | Token | Hex | Use |
 | --- | --- | --- |
-| `--fg` | `#2B2B2B` | primary text (charcoal) |
-| `--fg-muted` | `#6B6B6B` | secondary text |
-| `--fg-dim` | `#8A8A84` | tertiary / footer |
-| `--fg-label` | `#6B6B6B` | eyebrow labels |
+| `--fg` | `#15302A` | primary text (charcoal) |
+| `--fg-muted` | `#4F6B5F` | secondary text |
+| `--fg-dim` | `#7A8F83` | tertiary / footer |
+| `--fg-label` | `#4F6B5F` | eyebrow labels |
 
 ### Accents
 | Token | Hex | Use |
 | --- | --- | --- |
-| `--primary` / `--accent` | `#C56A2D` | burnt orange — primary brand accent |
-| `--primary-fg` | `#FAF7F2` | text on primary fills |
-| `--accent-anthropic` | `#C56A2D` | terracotta |
-| `--accent-openai` | `#4F7A58` | muted olive-teal |
+| `--primary` / `--accent` | `#2E7D5B` | burnt orange — primary brand accent |
+| `--primary-fg` | `#F1F6F2` | text on primary fills |
+| `--accent-anthropic` | `#2E7D5B` | terracotta |
+| `--accent-openai` | `#5B9378` | muted olive-teal |
 | `--accent-other` | `#7A6BB0` | dusty violet |
 | `--danger` | `#B04A3B` | |
-| `--warn` | `#C56A2D` | |
-| `--ok` | `#4F7A58` | |
+| `--warn` | `#2E7D5B` | |
+| `--ok` | `#5B9378` | |
 
-Hover variant of primary used inline: `#A85A24`.
+Hover variant of primary used inline: `#1F5F42`.
 
 ## Components / primitives
 
@@ -78,10 +78,10 @@ Grouping container for related cards. `.zone`:
 - Icon: `lucide-react`, size 16, paired with label text
 
 ### Brand mark
-Lucide `Server` icon, size 20, color `#C56A2D`, `strokeWidth={2.25}`, followed by app name in `text-sm font-semibold`.
+Lucide `Server` icon, size 20, color `#2E7D5B`, `strokeWidth={2.25}`, followed by app name in `text-sm font-semibold`.
 
 ### "Back to portfolio" pill
-Filled burnt-orange button at top of sidebar nav: `bg-[#C56A2D] text-white font-bold`, hover `#A85A24`, `ArrowLeft` icon + label.
+Filled burnt-orange button at top of sidebar nav: `bg-[#2E7D5B] text-white font-bold`, hover `#1F5F42`, `ArrowLeft` icon + label.
 
 ## Motion
 
@@ -94,7 +94,7 @@ Filled burnt-orange button at top of sidebar nav: `bg-[#C56A2D] text-white font-
 Custom warm-theme styling:
 - width/height `10px`
 - thumb `--border`, radius `8px`
-- hover thumb `#D4C9B3`
+- hover thumb `#AAC2B2`
 
 ## Native form elements
 
@@ -115,6 +115,6 @@ Custom warm-theme styling:
 1. Copy `globals.css` variable block + component classes (`.card`, `.zone`, `.section-eyebrow`, `.font-serif`, `.tnum`, `.fade-in`).
 2. Load Lora from Google Fonts in root layout `<head>`.
 3. Root layout = `flex md:flex-row` shell: Sidebar (232px) + `<main>` with `mx-auto max-w-[1240px] px-4 py-4 md:px-8 md:py-8`.
-4. Use `lucide-react` for all icons; primary accent `#C56A2D`.
+4. Use `lucide-react` for all icons; primary accent `#2E7D5B`.
 5. Numbers use `.tnum` or `.font-serif` (serif for hero metrics).
 6. Reach for `.zone` when grouping related cards, `.section-eyebrow` for section headers.

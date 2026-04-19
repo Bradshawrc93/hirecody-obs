@@ -39,7 +39,7 @@ export function GenericView({ slug, data: stats }: { slug: string; data: AppDeta
               data={stats.cost_over_time}
               xKey="date"
               yKey="cost"
-              color="#C56A2D"
+              color="#2E7D5B"
               yFormat="usd"
             />
           </div>
@@ -64,7 +64,7 @@ export function GenericView({ slug, data: stats }: { slug: string; data: AppDeta
               data={stats.latency_over_time}
               xKey="date"
               yKey="p95"
-              color="#C56A2D"
+              color="#2E7D5B"
             />
           </div>
         </Card>
@@ -83,7 +83,7 @@ export function GenericView({ slug, data: stats }: { slug: string; data: AppDeta
                 data={stats.thumbs_over_time}
                 xKey="date"
                 series={[
-                  { key: "up", label: "Thumbs up", color: "#4F7A58" },
+                  { key: "up", label: "Thumbs up", color: "#5B9378" },
                   { key: "down", label: "Thumbs down", color: "#B04A3B" },
                 ]}
               />
@@ -109,7 +109,7 @@ export function GenericView({ slug, data: stats }: { slug: string; data: AppDeta
             data={stats.success_rate_over_time}
             xKey="date"
             yKey="rate"
-            color="#4F7A58"
+            color="#5B9378"
             yFormat="percent"
             domain={[0, 1]}
           />

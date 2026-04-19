@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 type Tone = "neutral" | "info" | "ok" | "warn" | "danger" | "anthropic" | "openai";
 
 const tones: Record<Tone, { bg: string; fg: string; border: string }> = {
-  neutral:   { bg: "#EDE5D8",                  fg: "#2B2B2B", border: "#E5DDD0" },
+  neutral:   { bg: "#D2E2D7",                  fg: "#15302A", border: "#C8DCD0" },
   info:      { bg: "rgba(122,107,176,0.12)",   fg: "#5E4E94", border: "rgba(122,107,176,0.35)" },
   ok:        { bg: "rgba(79,122,88,0.14)",     fg: "#3D6046", border: "rgba(79,122,88,0.35)" },
   warn:      { bg: "rgba(197,106,45,0.14)",    fg: "#9E4F16", border: "rgba(197,106,45,0.35)" },

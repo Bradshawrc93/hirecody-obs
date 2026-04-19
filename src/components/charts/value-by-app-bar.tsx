@@ -38,38 +38,38 @@ export function ValueByAppBar({ data }: { data: ValueByAppPoint[] }) {
           layout="vertical"
           margin={{ top: 8, right: 24, left: 8, bottom: 0 }}
         >
-          <CartesianGrid stroke="#E5DDD0" horizontal={false} />
+          <CartesianGrid stroke="#C8DCD0" horizontal={false} />
           <XAxis
             type="number"
-            tick={{ fill: "#6B6B6B", fontSize: 11 }}
+            tick={{ fill: "#4F6B5F", fontSize: 11 }}
             tickFormatter={(v) => formatUsd(Number(v))}
-            axisLine={{ stroke: "#E5DDD0" }}
+            axisLine={{ stroke: "#C8DCD0" }}
             tickLine={false}
           />
           <YAxis
             type="category"
             dataKey="app"
-            tick={{ fill: "#2B2B2B", fontSize: 11 }}
-            axisLine={{ stroke: "#E5DDD0" }}
+            tick={{ fill: "#15302A", fontSize: 11 }}
+            axisLine={{ stroke: "#C8DCD0" }}
             tickLine={false}
             width={140}
           />
           <Tooltip
             cursor={{ fill: "rgba(229, 221, 208, 0.5)" }}
             contentStyle={{
-              background: "#FAF7F2",
-              border: "1px solid #E5DDD0",
+              background: "#F1F6F2",
+              border: "1px solid #C8DCD0",
               borderRadius: 8,
               fontSize: 12,
-              color: "#2B2B2B",
+              color: "#15302A",
             }}
             formatter={(v, name) => [
               formatUsd(Number(v)),
               name === "value_usd" ? "Value" : "Spend",
             ]}
           />
-          <Bar dataKey="value_usd" fill="#4F7A58" radius={[0, 4, 4, 0]} />
-          <Bar dataKey="spend_usd" fill="#C56A2D" radius={[0, 4, 4, 0]} />
+          <Bar dataKey="value_usd" fill="#5B9378" radius={[0, 4, 4, 0]} />
+          <Bar dataKey="spend_usd" fill="#2E7D5B" radius={[0, 4, 4, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

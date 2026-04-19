@@ -52,7 +52,7 @@ function FlagCard({ flag }: { flag: FlagWithApp }) {
         <Link
           href={href}
           className="mt-1 inline-block text-xs font-medium"
-          style={{ color: "var(--fg-accent, #C56A2D)" }}
+          style={{ color: "var(--fg-accent, #2E7D5B)" }}
         >
           View →
         </Link>
@@ -72,7 +72,7 @@ function describe(f: FlagWithApp): {
     case "model_efficiency":
       return {
         icon: <Sparkles size={14} />,
-        tint: "#4F7A58",
+        tint: "#5B9378",
         title: `${f.cheap_model} is matching ${f.expensive_model}`,
         body: `Within ${(f.rate_gap * 100).toFixed(1)}pp on thumbs-up rate · est. ${formatUsd(f.estimated_monthly_savings_usd)}/mo savings if downgraded.`,
         anchor: "model-efficiency",
