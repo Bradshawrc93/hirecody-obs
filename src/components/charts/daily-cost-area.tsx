@@ -45,7 +45,7 @@ export function DailyCostArea({
           />
           <Tooltip
             contentStyle={{
-              background: "#F1F6F2",
+              background: "#F6F7F5",
               border: "1px solid #C8DCD0",
               borderRadius: 8,
               fontSize: 12,

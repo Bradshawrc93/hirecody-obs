@@ -6,7 +6,7 @@ Apply this design system consistently. It's a warm, editorial, minimal aesthetic
 
 | Token | Hex | Use |
 |---|---|---|
-| `background` | `#F1F6F2` | Page background (warm off-white) |
+| `background` | `#F6F7F5` | Page background (near-neutral off-white) |
 | `foreground` | `#15302A` | Primary text (charcoal — never pure black) |
 | `card` / `secondary` / `muted` | `#DCEBE2` | Card surfaces, secondary backgrounds (sand) |
 | `panel` | `#D2E2D7` | Slightly deeper panels |

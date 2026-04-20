@@ -14,7 +14,7 @@ export function CostByAppDonut({ data }: { data: AppCostPoint[] }) {
         <PieChart>
           <Tooltip
             contentStyle={{
-              background: "#F1F6F2",
+              background: "#F6F7F5",
               border: "1px solid #C8DCD0",
               borderRadius: 8,
               fontSize: 12,
@@ -29,7 +29,7 @@ export function CostByAppDonut({ data }: { data: AppCostPoint[] }) {
             innerRadius={60}
             outerRadius={100}
             paddingAngle={2}
-            stroke="#F1F6F2"
+            stroke="#F6F7F5"
             strokeWidth={2}
             onClick={(d) => {
               const slug = (d as unknown as { slug?: string })?.slug;

@@ -25,7 +25,7 @@ Defined on `:root` in `globals.css`. Always reference via `var(--token)` — don
 ### Surfaces
 | Token | Hex | Use |
 | --- | --- | --- |
-| `--bg` | `#F1F6F2` | page background (warm off-white) |
+| `--bg` | `#F6F7F5` | page background (near-neutral off-white) |
 | `--bg-elev` | `#DCEBE2` | cards (soft sand) |
 | `--bg-elev-2` | `#D2E2D7` | nested / hover surface |
 | `--bg-hover` | `#C8DCD0` | active hover fill |

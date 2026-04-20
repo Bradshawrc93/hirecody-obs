@@ -9,7 +9,7 @@
 
 :root {
   /* Surfaces */
-  --bg:           #F1F6F2;  /* page background — mint-tinted off-white */
+  --bg:           #F6F7F5;  /* page background — near-neutral off-white */
   --bg-elev:      #DCEBE2;  /* card — pale mint */
   --bg-elev-2:    #D2E2D7;  /* nested / panel */
   --bg-hover:     #C8DCD0;  /* active hover fill */
@@ -35,11 +35,11 @@
 
   /* shadcn-style aliases (mint palette) — provided for components that
      reference them directly. These mirror the --bg / --fg / etc. above. */
-  --background: #F1F6F2;
+  --background: #F6F7F5;
   --foreground: #15302A;
   --card: #DCEBE2;
   --card-foreground: #15302A;
-  --popover: #F1F6F2;
+  --popover: #F6F7F5;
   --popover-foreground: #15302A;
   --primary-foreground: #F1F6F2;
   --secondary: #DCEBE2;
